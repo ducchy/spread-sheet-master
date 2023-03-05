@@ -495,7 +495,7 @@ namespace SpreadSheetMaster.Editor
 
 			AppendTab(sb, tabCount).AppendFormat("public partial class {0} : ImportableSpreadSheetMasterBase<{1}>", configData.masterName, configData.masterDataName).AppendLine();
 			AppendTab(sb, tabCount++).Append("{").AppendLine();
-			AppendTab(sb, tabCount).AppendFormat("public override string spreadSheetId => \"{0}\";", configData.spreadSheetId).AppendLine();
+			AppendTab(sb, tabCount).AppendFormat("public override string defaultSpreadSheetId => \"{0}\";", configData.spreadSheetId).AppendLine();
 			AppendTab(sb, tabCount).AppendFormat("public override string sheetName => \"{0}\";", configData.sheetName).AppendLine();
 			AppendTab(sb, --tabCount).Append("}").AppendLine();
 
