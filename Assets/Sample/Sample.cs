@@ -7,6 +7,8 @@ namespace sample
 {
 	public class Sample : MonoBehaviour
 	{
+		private const string OVERWRITE_SPREAD_SHEET_ID = "1cjSUtkl0frO8OjBKWNPfBYMGpPzLnTAz3ZGiwK6pNo8";
+
 		private readonly CharacterMaster _characterMaster = new CharacterMaster();
 		private readonly SpreadSheetMasterImporter _importer = new SpreadSheetMasterImporter();
 
@@ -21,6 +23,11 @@ namespace sample
 
 		private async void ImportMasterAllAsync()
 		{
+			await _importer.ImportFromSpreadSheetAsync(_characterMaster, OnError, ct);
+			OnCompletedImport();
+
+			_characterMaster.OverwriteSpreadSheetId(OVERWRITE_SPREAD_SHEET_ID);
+
 			await _importer.ImportFromSpreadSheetAsync(_characterMaster, OnError, ct);
 			OnCompletedImport();
 		}
