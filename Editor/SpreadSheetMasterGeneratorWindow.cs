@@ -556,6 +556,22 @@ namespace SpreadSheetMaster.Editor
 
 			AppendTab(sb, --tabCount).Append("}").AppendLine();
 
+			AppendTab(sb, tabCount).Append("public override string ToString()").AppendLine();
+			AppendTab(sb, tabCount++).Append("{").AppendLine();
+
+			AppendTab(sb, tabCount++).AppendFormat("return \"{0} [\" +", configData.masterDataName).AppendLine();
+			for (int i = 0; i < indexColumnList.Count; i++)
+			{
+				var tuple = indexColumnList[i];
+				AppendTab(sb, tabCount).AppendFormat("\"{0}=\" + {0} +{1}",
+					tuple.Item2.name,
+					(i >= indexColumnList.Count - 1 ? string.Empty : (" \", \" +")))
+					.AppendLine();
+			}
+			AppendTab(sb, tabCount--).Append("\"]\";").AppendLine();
+
+			AppendTab(sb, --tabCount).Append("}").AppendLine();
+
 			AppendTab(sb, --tabCount).Append("}").AppendLine();
 
 			if (namespaceExistFlag)
