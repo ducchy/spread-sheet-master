@@ -1,9 +1,8 @@
 using System.Text;
 using System.Threading;
-using SpreadSheetMaster;
 using UnityEngine;
 
-namespace sample
+namespace SpreadSheetMaster.Samples
 {
 	public class Sample : MonoBehaviour
 	{
@@ -23,6 +22,8 @@ namespace sample
 
 		private async void ImportMasterAllAsync()
 		{
+			Debug.Log("[インポート開始]");
+
 			await _importer.ImportFromSpreadSheetAsync(_characterMaster, OnError, ct);
 			OnCompletedImport();
 

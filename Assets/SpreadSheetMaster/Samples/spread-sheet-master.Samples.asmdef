@@ -1,0 +1,16 @@
+{
+    "name": "spread-sheet-master.Samples",
+    "rootNamespace": "",
+    "references": [
+        "GUID:926c306b3feb4484ea7e17c0ba3c3eea"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

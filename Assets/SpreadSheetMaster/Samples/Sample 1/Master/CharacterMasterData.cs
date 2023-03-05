@@ -1,7 +1,7 @@
 using SpreadSheetMaster;
 using System.Collections.Generic;
 
-namespace sample
+namespace SpreadSheetMaster.Samples
 {
 	public partial class CharacterMasterData : ImportableSpreadSheetMasterDataBase
 	{

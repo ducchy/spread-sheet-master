@@ -1,6 +1,6 @@
 using SpreadSheetMaster;
 
-namespace sample
+namespace SpreadSheetMaster.Samples
 {
 	public partial class CharacterMaster : ImportableSpreadSheetMasterBase<CharacterMasterData>
 	{
