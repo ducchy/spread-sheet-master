@@ -4,8 +4,11 @@ namespace SpreadSheetMaster
 
 	public abstract class ImportableSpreadSheetMasterBase<T> : IImportableSpreadSheetMaster where T : ImportableSpreadSheetMasterDataBase, new()
 	{
-		public abstract string spreadSheetId { get; }
+		public abstract string defaultSpreadSheetId { get; }
 		public abstract string sheetName { get; }
+
+		private string _overwriteSpreadSheetId = string.Empty;
+		public string spreadSheetId => !string.IsNullOrEmpty(_overwriteSpreadSheetId) ? _overwriteSpreadSheetId : defaultSpreadSheetId;
 
 		public IReadOnlyList<T> datas { get { return _datas; } }
 		protected List<T> _datas = new List<T>();
@@ -52,6 +55,15 @@ namespace SpreadSheetMaster
 		private bool IndexOutOfRange(int index)
 		{
 			return _datas == null || index < 0 || _datas.Count <= index;
+		}
+
+		public void OverwriteSpreadSheetId(string id)
+		{
+			_overwriteSpreadSheetId = id;
+		}
+		public void ClearOverwriteSpreadSheetId()
+		{
+			_overwriteSpreadSheetId = string.Empty;
 		}
 	}
 }
