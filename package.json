@@ -1,13 +1,29 @@
 {
-  "name": "com.ducchy.spread-sheet-master",
-  "version": "1.1.2",
-  "displayName": "SpreadSheetMaster",
-  "description": "An editor extension that generates model classes for google spreadsheets.",
-  "dependencies": {},
-  "keywords": [],
-  "author": {
-	"name": "ducchy",
-	"email": "ducchy.gamedev@gmail.com",
-	"url": "https://github.com/ducchy/spread-sheet-master"
-  }
+	"name": "com.ducchy.spread-sheet-master",
+	"version": "1.2.0",
+	"displayName": "SpreadSheetMaster",
+	"description": "An editor extension that generates model classes for google spreadsheets.",
+	"dependencies": {},
+	"keywords": [
+		"unity",
+		"google",
+		"spread sheet"
+	],
+	"author": {
+		"name": "ducchy",
+		"email": "ducchy.gamedev@gmail.com",
+		"url": "https://github.com/ducchy/spread-sheet-master"
+	},
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/ducchy/spread-sheet-master"
+	},
+	"samples": [
+		{
+			"displayName": "Sample 1",
+			"description": "Sample to import Google Spreadsheet master.",
+			"path": "Samples~/Sample 1"
+		}
+	]
 }
