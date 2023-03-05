@@ -4,9 +4,9 @@ namespace SpreadSheetMaster.Editor
 	using System.IO;
 	using System.Linq;
 	using System.Text;
+	using System.Threading;
 	using UnityEditor;
 	using UnityEngine;
-	using Unity.EditorCoroutines.Editor;
 
 	public class SpreadSheetMasterGeneratorWindow : EditorWindow
 	{
@@ -68,7 +68,9 @@ namespace SpreadSheetMaster.Editor
 		private string _generateScriptWarning;
 		private Vector2 _scrollPositionCsvPreview;
 		private Vector2 _scrollPositionColumns;
-		private EditorCoroutine _downloadSheetCoroutine = null;
+
+		private readonly CancellationTokenSource _cts = new CancellationTokenSource();
+		private CancellationToken ct => _cts.Token;
 
 
 		private void OnEnable()
@@ -77,8 +79,12 @@ namespace SpreadSheetMaster.Editor
 
 		private void OnDisable()
 		{
-			if (_downloadSheetCoroutine != null)
-				this.StopCoroutine(_downloadSheetCoroutine);
+		}
+
+		private void OnDestroy()
+		{
+			_cts.Cancel();
+			_cts.Dispose();
 		}
 
 
@@ -134,17 +140,7 @@ namespace SpreadSheetMaster.Editor
 						_downloadSheetError = string.Empty;
 						EditorGUIUtility.editingTextField = false;
 
-						SheetDownloader downloader = new SheetDownloader();
-						_downloadSheetCoroutine = this.StartCoroutine(downloader.DownloadSheetAsync(_spreadSheetId, _sheetName, (response) =>
-						{
-							_downloadText = response;
-							_editMasterConfig = ParseCsvToConfig(_downloadText, _spreadSheetId, _sheetName);
-							_downloadingFlag = false;
-						}, (error) =>
-						{
-							_downloadSheetError = error;
-							_downloadingFlag = false;
-						}));
+						DownloadSheetAsync();
 					}
 				}
 
@@ -174,6 +170,21 @@ namespace SpreadSheetMaster.Editor
 					}
 				}
 			}
+		}
+
+		private async void DownloadSheetAsync()
+		{
+			SheetDownloader downloader = new SheetDownloader();
+			await downloader.DownloadSheetAsync(_spreadSheetId, _sheetName, (response) =>
+			{
+				_downloadText = response;
+				_editMasterConfig = ParseCsvToConfig(_downloadText, _spreadSheetId, _sheetName);
+				_downloadingFlag = false;
+			}, (error) =>
+			{
+				_downloadSheetError = error;
+				_downloadingFlag = false;
+			}, ct);
 		}
 
 		private void DrawEditMasterConfig()
