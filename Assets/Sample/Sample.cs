@@ -45,7 +45,7 @@ namespace sample
 			var characters = _characterMaster.datas;
 			sb.AppendFormat("CharacterMaster: count={0}", characters.Count).AppendLine();
 			foreach (var character in characters)
-				sb.AppendFormat("- {0}: {1}", character.id, character.name).AppendLine();
+				sb.AppendFormat("- {0}", character.ToString()).AppendLine();
 
 			Debug.Log(sb.ToString());
 		}

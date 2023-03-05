@@ -26,5 +26,14 @@ namespace sample
 			age = GetInt(record, COLUMN_AGE);
 			gender = GetInt(record, COLUMN_GENDER);
 		}
+		public override string ToString()
+		{
+			return "CharacterMasterData [" +
+				"id=" + id + ", " +
+				"name=" + name + ", " +
+				"age=" + age + ", " +
+				"gender=" + gender +
+				"]";
+		}
 	}
 }
