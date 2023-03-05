@@ -1,18 +1,19 @@
 namespace SpreadSheetMaster
 {
-	using System.Collections;
+	using System.Threading;
+	using System.Threading.Tasks;
 	using UnityEngine;
 
 	public class SpreadSheetMasterImporter
 	{
 		private CsvParser _parser = new CsvParser();
 
-		public IEnumerator ImportFromSpreadSheetAsync(IImportableSpreadSheetMaster master, System.Action<string> onError)
+		public async Task ImportFromSpreadSheetAsync(IImportableSpreadSheetMaster master, System.Action<string> onError, CancellationToken ct)
 		{
 			string csv = string.Empty;
 
 			SheetDownloader downloader = new SheetDownloader();
-			yield return downloader.DownloadSheetAsync(master.spreadSheetId, master.sheetName, (str) => csv = str, onError);
+			await downloader.DownloadSheetAsync(master.spreadSheetId, master.sheetName, (str) => csv = str, onError, ct);
 
 			ImportFromCsv(master, csv);
 		}
