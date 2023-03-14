@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace SpreadSheetMaster
 {
 	using System.Collections.Generic;
@@ -5,6 +7,13 @@ namespace SpreadSheetMaster
 
 	public class CsvParser
 	{
+		private readonly IgnoreRowCondition[] _ignoreRowConditions;
+		
+		public CsvParser(IgnoreRowCondition[] ignoreRowConditions)
+		{
+			_ignoreRowConditions = ignoreRowConditions;
+		}
+		
 		public IReadOnlyList<IReadOnlyList<string>> Perse(string csv, bool excludeHeader)
 		{
 			List<IReadOnlyList<string>> records = new List<IReadOnlyList<string>>();
@@ -13,8 +22,12 @@ namespace SpreadSheetMaster
 			if (excludeHeader && reader.Peek() != -1)
 				reader.ReadLine();
 
+			int row = 1;
 			while (reader.Peek() != -1)
 			{
+				if (IsIgnoreRow(++row))
+					continue;
+				
 				var line = reader.ReadLine();
 				var columns = new List<string>();
 				var elements = line.Split(',');
@@ -29,6 +42,18 @@ namespace SpreadSheetMaster
 				records.Add(columns);
 			}
 			return records;
+		}
+
+		private bool IsIgnoreRow(int row)
+		{
+			if (_ignoreRowConditions == null || _ignoreRowConditions.Length == 0)
+				return false;
+
+			foreach (var ignoreRowCondition in _ignoreRowConditions)
+				if (ignoreRowCondition.IsIgnore(row))
+					return true;
+
+			return false;
 		}
 	}
 }
