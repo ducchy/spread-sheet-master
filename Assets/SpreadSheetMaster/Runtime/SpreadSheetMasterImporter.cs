@@ -1,49 +1,51 @@
 namespace SpreadSheetMaster
 {
-	using System.Threading;
-	using System.Threading.Tasks;
-	using UnityEngine;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using UnityEngine;
 
-	public class SpreadSheetMasterImporter
-	{
-		private readonly SpreadSheetSetting _setting;
-		private readonly CsvParser _parser;
+    public class SpreadSheetMasterImporter
+    {
+        private readonly SpreadSheetSetting _setting;
+        private readonly CsvParser _parser;
 
-		public SpreadSheetMasterImporter(SpreadSheetSetting setting)
-		{
-			_setting = setting;
-			_parser = new CsvParser(_setting != null ? _setting.ignoreRowConditions : null);
-		}
-		
-		public async Task ImportFromSpreadSheetAsync(IImportableSpreadSheetMaster master, System.Action<string> onError, CancellationToken ct)
-		{
-			string csv = string.Empty;
+        public SpreadSheetMasterImporter(SpreadSheetSetting setting)
+        {
+            _setting = setting;
+            _parser = new CsvParser(_setting != null ? _setting.ignoreRowConditions : null);
+        }
 
-			SheetDownloader downloader = new SheetDownloader();
-			await downloader.DownloadSheetAsync(master.spreadSheetId, master.sheetId, (str) => csv = str, onError, ct);
+        public async Task ImportFromSpreadSheetAsync(IImportableSpreadSheetMaster master, System.Action<string> onError,
+            CancellationToken ct)
+        {
+            var csv = string.Empty;
 
-			ImportFromCsv(master, csv);
-		}
+            var downloader = new SheetDownloader();
+            await downloader.DownloadSheetAsync(master.spreadSheetId, master.sheetId, (str) => csv = str, onError, ct);
 
-		public void ImportFromResource(IImportableSpreadSheetMaster master, string resourcePath)
-		{
-			TextAsset csvFile = Resources.Load<TextAsset>(resourcePath);
-			if (csvFile == null)
-			{
-				Debug.LogFormat("csvファイルのリソースロード失敗: resourcePath={0}", resourcePath);
-				return;
-			}
-			ImportFromCsv(master, csvFile.text);
-		}
+            ImportFromCsv(master, csv);
+        }
 
-		public void ImportFromCsv(IImportableSpreadSheetMaster master, string csv)
-		{
-			if (csv == string.Empty)
-				return;
+        public void ImportFromResource(IImportableSpreadSheetMaster master, string resourcePath)
+        {
+            var csvFile = Resources.Load<TextAsset>(resourcePath);
+            if (csvFile == null)
+            {
+                Debug.LogFormat("csvファイルのリソースロード失敗: resourcePath={0}", resourcePath);
+                return;
+            }
 
-			master.PreImport();
-			master.Import(_parser.Perse(csv, excludeHeader: true));
-			master.PostImport();
-		}
-	}
+            ImportFromCsv(master, csvFile.text);
+        }
+
+        public void ImportFromCsv(IImportableSpreadSheetMaster master, string csv)
+        {
+            if (csv == string.Empty)
+                return;
+
+            master.PreImport();
+            master.Import(_parser.Parse(csv, excludeHeader: true));
+            master.PostImport();
+        }
+    }
 }

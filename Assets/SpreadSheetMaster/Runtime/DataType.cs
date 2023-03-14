@@ -1,11 +1,11 @@
 namespace SpreadSheetMaster
 {
-	public enum DataType
-	{
-		String,
-		Int,
-		Float,
-		Bool,
-		Enum,
-	}
+    public enum DataType
+    {
+        String,
+        Int,
+        Float,
+        Bool,
+        Enum,
+    }
 }
