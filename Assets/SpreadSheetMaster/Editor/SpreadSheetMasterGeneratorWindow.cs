@@ -241,10 +241,10 @@ namespace SpreadSheetMaster.Editor
         private async void DownloadSheetAsync()
         {
             SheetDownloader downloader = new SheetDownloader();
-            await downloader.DownloadSheetAsync(_spreadSheetId, _sheetId, (response) =>
+            await downloader.DownloadSheetAsync(SpreadSheetId, SheetId, (response) =>
             {
                 _downloadText = response;
-                _editMasterConfig = ParseCsvToConfig(_downloadText, _spreadSheetId, _masterName);
+                _editMasterConfig = ParseCsvToConfig(_downloadText, SpreadSheetId, SheetId, SheetMasterName);
                 _downloadingFlag = false;
             }, (error) =>
             {
@@ -405,25 +405,25 @@ namespace SpreadSheetMaster.Editor
                 _downloadSheetWarning = "マスタ名 を入力してください";
         }
 
-        private MasterConfigData ParseCsvToConfig(string csv, string spreadSheetId, string masterName)
+        private MasterConfigData ParseCsvToConfig(string csv, string spreadSheetId, string sheetId, string masterName)
         {
             var parser = new CsvParser(_setting != null ? _setting.ignoreRowConditions : null);
             var records = parser.Perse(csv, excludeHeader: false);
 
-            return CreateMasterConfigData(spreadSheetId, masterName, records);
+            return CreateMasterConfigData(spreadSheetId, sheetId, masterName, records);
         }
 
 
         #region create_config_data
 
-        private MasterConfigData CreateMasterConfigData(string spreadSheetId, string masterName,
+        private MasterConfigData CreateMasterConfigData(string spreadSheetId, string sheetId, string masterName,
             IReadOnlyList<IReadOnlyList<string>> records)
         {
             var config = new MasterConfigData
             {
                 masterName = SnakeToUpperCamel(masterName + "Master"),
                 spreadSheetId = spreadSheetId,
-                sheetId = masterName
+                sheetId = sheetId
             };
 
             if (records == null || records.Count == 0)
@@ -621,7 +621,7 @@ namespace SpreadSheetMaster.Editor
             AppendTab(sb, tabCount)
                 .AppendFormat("public override string defaultSpreadSheetId => \"{0}\";", configData.spreadSheetId)
                 .AppendLine();
-            AppendTab(sb, tabCount).AppendFormat("public override string sheetName => \"{0}\";", configData.sheetId)
+            AppendTab(sb, tabCount).AppendFormat("public override string sheetId => \"{0}\";", configData.sheetId)
                 .AppendLine();
             AppendTab(sb, --tabCount).Append("}").AppendLine();
 

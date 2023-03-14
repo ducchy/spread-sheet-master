@@ -5,7 +5,7 @@ namespace SpreadSheetMaster
 	public interface IImportableSpreadSheetMaster
 	{
 		string spreadSheetId { get; }
-		string sheetName { get; }
+		string sheetId { get; }
 
 		void PreImport();
 		void Import(IReadOnlyList<IReadOnlyList<string>> records);
