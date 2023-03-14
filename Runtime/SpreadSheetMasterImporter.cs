@@ -20,7 +20,7 @@ namespace SpreadSheetMaster
 			string csv = string.Empty;
 
 			SheetDownloader downloader = new SheetDownloader();
-			await downloader.DownloadSheetAsync(master.spreadSheetId, master.sheetName, (str) => csv = str, onError, ct);
+			await downloader.DownloadSheetAsync(master.spreadSheetId, master.sheetId, (str) => csv = str, onError, ct);
 
 			ImportFromCsv(master, csv);
 		}

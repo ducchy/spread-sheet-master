@@ -25,10 +25,11 @@ namespace SpreadSheetMaster
 			int row = 1;
 			while (reader.Peek() != -1)
 			{
+				var line = reader.ReadLine();
+				
 				if (IsIgnoreRow(++row))
 					continue;
 				
-				var line = reader.ReadLine();
 				var columns = new List<string>();
 				var elements = line.Split(',');
 				for (int i = 0; i < elements.Length; i++)
