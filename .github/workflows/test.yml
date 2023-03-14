@@ -1,0 +1,15 @@
+# ./github/workflows/build.yml
+# ./github/workflows/test.yml
+name: Act Sample
+on:
+  release:
+    types: [created]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "MY_ENV_VAR = ${{ env.MY_ENV_VAR }}"
+          echo "MY_2ND_ENV_VAR = ${{ env.MY_2ND_ENV_VAR }}"
+          echo "NPM_TOKEN = ${{ secrets.NPM_TOKEN }}"
+          echo "GITHUB_TOKEN = ${{ secrets.GITHUB_TOKEN }}"
