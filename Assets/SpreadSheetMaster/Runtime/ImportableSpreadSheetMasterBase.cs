@@ -5,7 +5,7 @@ namespace SpreadSheetMaster
 	public abstract class ImportableSpreadSheetMasterBase<T> : IImportableSpreadSheetMaster where T : ImportableSpreadSheetMasterDataBase, new()
 	{
 		public abstract string defaultSpreadSheetId { get; }
-		public abstract string sheetName { get; }
+		public abstract string sheetId { get; }
 
 		private string _overwriteSpreadSheetId = string.Empty;
 		public string spreadSheetId => !string.IsNullOrEmpty(_overwriteSpreadSheetId) ? _overwriteSpreadSheetId : defaultSpreadSheetId;

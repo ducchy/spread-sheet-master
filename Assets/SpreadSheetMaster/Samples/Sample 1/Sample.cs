@@ -4,55 +4,55 @@ using UnityEngine;
 
 namespace SpreadSheetMaster.Samples
 {
-	public class Sample : MonoBehaviour
-	{
-		private const string OVERWRITE_SPREAD_SHEET_ID = "1cjSUtkl0frO8OjBKWNPfBYMGpPzLnTAz3ZGiwK6pNo8";
+    public class Sample : MonoBehaviour
+    {
+        private const string OVERWRITE_SPREAD_SHEET_ID = "1JVNBk5FbMS75I-l9ua1e2lbZRry4Q7kvrf7Kfu267bk";
 
-		[SerializeField] private SpreadSheetSetting _setting;
-		
-		private readonly CharacterMaster _characterMaster = new CharacterMaster();
-		private SpreadSheetMasterImporter _importer;
+        [SerializeField] private SpreadSheetSetting _setting;
 
-		private readonly CancellationTokenSource _cts = new CancellationTokenSource();
-		private CancellationToken ct => _cts.Token;
+        private readonly CharacterMaster _characterMaster = new CharacterMaster();
+        private SpreadSheetMasterImporter _importer;
+
+        private readonly CancellationTokenSource _cts = new CancellationTokenSource();
+        private CancellationToken ct => _cts.Token;
 
 
-		private void Start()
-		{
-			_importer = new SpreadSheetMasterImporter(_setting);
-			
-			ImportMasterAllAsync();
-		}
+        private void Start()
+        {
+            _importer = new SpreadSheetMasterImporter(_setting);
 
-		private async void ImportMasterAllAsync()
-		{
-			Debug.Log("[インポート開始]");
+            ImportMasterAllAsync();
+        }
 
-			await _importer.ImportFromSpreadSheetAsync(_characterMaster, OnError, ct);
-			OnCompletedImport();
+        private async void ImportMasterAllAsync()
+        {
+            Debug.Log("[インポート開始]");
 
-			_characterMaster.OverwriteSpreadSheetId(OVERWRITE_SPREAD_SHEET_ID);
+            await _importer.ImportFromSpreadSheetAsync(_characterMaster, OnError, ct);
+            OnCompletedImport();
 
-			await _importer.ImportFromSpreadSheetAsync(_characterMaster, OnError, ct);
-			OnCompletedImport();
-		}
+            _characterMaster.OverwriteSpreadSheetId(OVERWRITE_SPREAD_SHEET_ID);
 
-		private void OnError(string error)
-		{
-			Debug.LogError(error);
-		}
+            await _importer.ImportFromSpreadSheetAsync(_characterMaster, OnError, ct);
+            OnCompletedImport();
+        }
 
-		private void OnCompletedImport()
-		{
-			var sb = new StringBuilder();
-			sb.Append("[インポート完了]").AppendLine();
+        private void OnError(string error)
+        {
+            Debug.LogError(error);
+        }
 
-			var characters = _characterMaster.datas;
-			sb.AppendFormat("CharacterMaster: count={0}", characters.Count).AppendLine();
-			foreach (var character in characters)
-				sb.AppendFormat("- {0}", character.ToString()).AppendLine();
+        private void OnCompletedImport()
+        {
+            var sb = new StringBuilder();
+            sb.Append("[インポート完了]").AppendLine();
 
-			Debug.Log(sb.ToString());
-		}
-	}
+            var characters = _characterMaster.datas;
+            sb.AppendFormat("CharacterMaster: count={0}", characters.Count).AppendLine();
+            foreach (var character in characters)
+                sb.AppendFormat("- {0}", character.ToString()).AppendLine();
+
+            Debug.Log(sb.ToString());
+        }
+    }
 }
