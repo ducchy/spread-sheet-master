@@ -1,69 +1,72 @@
 namespace SpreadSheetMaster
 {
-	using System.Collections.Generic;
+    using System.Collections.Generic;
 
-	public abstract class ImportableSpreadSheetMasterBase<T> : IImportableSpreadSheetMaster where T : ImportableSpreadSheetMasterDataBase, new()
-	{
-		public abstract string defaultSpreadSheetId { get; }
-		public abstract string sheetId { get; }
+    public abstract class ImportableSpreadSheetMasterBase<T> : IImportableSpreadSheetMaster
+        where T : ImportableSpreadSheetMasterDataBase, new()
+    {
+        public abstract string defaultSpreadSheetId { get; }
+        public abstract string sheetId { get; }
 
-		private string _overwriteSpreadSheetId = string.Empty;
-		public string spreadSheetId => !string.IsNullOrEmpty(_overwriteSpreadSheetId) ? _overwriteSpreadSheetId : defaultSpreadSheetId;
+        private string _overwriteSpreadSheetId = string.Empty;
 
-		public IReadOnlyList<T> datas { get { return _datas; } }
-		protected List<T> _datas = new List<T>();
+        public string spreadSheetId => !string.IsNullOrEmpty(_overwriteSpreadSheetId)
+            ? _overwriteSpreadSheetId
+            : defaultSpreadSheetId;
 
-		public virtual void PreImport()
-		{
-			_datas.Clear();
-		}
+        public IReadOnlyList<T> datas => _datas;
 
-		public virtual void Import(IReadOnlyList<IReadOnlyList<string>> records)
-		{
-			for (int i = 0; i < records.Count; i++)
-			{
-				T masterData = new T();
-				masterData.SetData(records[i]);
-				_datas.Add(masterData);
-			}
-		}
+        protected List<T> _datas = new List<T>();
 
-		public virtual void PostImport()
-		{
-		}
+        public virtual void PreImport()
+        {
+            _datas.Clear();
+        }
 
-		public T GetData(int id)
-		{
-			if (_datas == null)
-				return null;
+        public virtual void Import(IReadOnlyList<IReadOnlyList<string>> records)
+        {
+            foreach (var t in records)
+            {
+                var masterData = new T();
+                masterData.SetData(t);
+                _datas.Add(masterData);
+            }
+        }
 
-			for (int i = 0; i < _datas.Count; i++)
-			{
-				T data = _datas[i];
-				if (data.GetId() == id)
-					return data;
-			}
+        public virtual void PostImport()
+        {
+        }
 
-			return null;
-		}
+        public T GetData(int id)
+        {
+            if (_datas == null)
+                return null;
 
-		public T GetDataByIndex(int index)
-		{
-			return IndexOutOfRange(index) ? null : _datas[index];
-		}
+            foreach (var data in _datas)
+                if (data.GetId() == id)
+                    return data;
 
-		private bool IndexOutOfRange(int index)
-		{
-			return _datas == null || index < 0 || _datas.Count <= index;
-		}
+            return null;
+        }
 
-		public void OverwriteSpreadSheetId(string id)
-		{
-			_overwriteSpreadSheetId = id;
-		}
-		public void ClearOverwriteSpreadSheetId()
-		{
-			_overwriteSpreadSheetId = string.Empty;
-		}
-	}
+        public T GetDataByIndex(int index)
+        {
+            return IndexOutOfRange(index) ? null : _datas[index];
+        }
+
+        private bool IndexOutOfRange(int index)
+        {
+            return _datas == null || index < 0 || _datas.Count <= index;
+        }
+
+        public void OverwriteSpreadSheetId(string id)
+        {
+            _overwriteSpreadSheetId = id;
+        }
+
+        public void ClearOverwriteSpreadSheetId()
+        {
+            _overwriteSpreadSheetId = string.Empty;
+        }
+    }
 }

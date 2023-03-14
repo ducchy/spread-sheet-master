@@ -80,6 +80,7 @@ namespace SpreadSheetMaster.Editor
                                                     _spreadSheetIndex < _setting.spreadSheetDatas.Length)
             ? _setting.spreadSheetDatas[_spreadSheetIndex]
             : null;
+
         private string SpreadSheetId
         {
             get
@@ -93,6 +94,7 @@ namespace SpreadSheetMaster.Editor
                                         _sheetIndex < _setting.sheetDatas.Length)
             ? _setting.sheetDatas[_sheetIndex]
             : null;
+
         private string SheetId
         {
             get
@@ -101,6 +103,7 @@ namespace SpreadSheetMaster.Editor
                 return sd != null ? sd.id : _spreadSheetId;
             }
         }
+
         private string SheetMasterName
         {
             get
@@ -240,7 +243,7 @@ namespace SpreadSheetMaster.Editor
 
         private async void DownloadSheetAsync()
         {
-            SheetDownloader downloader = new SheetDownloader();
+            var downloader = new SheetDownloader();
             await downloader.DownloadSheetAsync(SpreadSheetId, SheetId, (response) =>
             {
                 _downloadText = response;
@@ -320,9 +323,9 @@ namespace SpreadSheetMaster.Editor
 
                                     if (GUILayout.Button("適用", GUILayout.MaxWidth(40)))
                                     {
-                                        System.Type type =
-                                            System.Type.GetType(column.enumTypeName + ", Assembly-CSharp.dll");
-                                        bool isEnum = type != null && type.IsEnum;
+                                        Type type =
+                                            Type.GetType(column.enumTypeName + ", Assembly-CSharp.dll");
+                                        var isEnum = type != null && type.IsEnum;
                                         column.validFlag = isEnum;
                                         column.enumType = isEnum ? type : null;
                                     }
@@ -366,7 +369,7 @@ namespace SpreadSheetMaster.Editor
                     Undo.RecordObject(this, "Modify ExportMasterScript");
                     if (GUILayout.Button("生成先フォルダ選択"))
                     {
-                        string path = EditorUtility.OpenFolderPanel("出力先フォルダ選択", Application.dataPath, string.Empty);
+                        var path = EditorUtility.OpenFolderPanel("出力先フォルダ選択", Application.dataPath, string.Empty);
                         if (!string.IsNullOrEmpty(path))
                             _directoryPath = GetAssetsPath(path);
                     }
@@ -408,7 +411,7 @@ namespace SpreadSheetMaster.Editor
         private MasterConfigData ParseCsvToConfig(string csv, string spreadSheetId, string sheetId, string masterName)
         {
             var parser = new CsvParser(_setting != null ? _setting.ignoreRowConditions : null);
-            var records = parser.Perse(csv, excludeHeader: false);
+            var records = parser.Parse(csv, excludeHeader: false);
 
             return CreateMasterConfigData(spreadSheetId, sheetId, masterName, records);
         }
@@ -430,57 +433,34 @@ namespace SpreadSheetMaster.Editor
                 return config;
 
             var columnNames = records[0];
-            var columnDatas = GetFirstRecord(records);
-            int columnCount = columnNames.Count;
+            var columnDatas = records.Count > 1 ? records[1] : null;
+            var columnCount = columnNames.Count;
             if (columnCount == 0)
                 return config;
 
             config.columns = new MasterConfigData.Column[columnCount];
-            for (int i = 0; i < columnCount; i++)
+            for (var i = 0; i < columnCount; i++)
             {
-                string columnData = (columnDatas != null && columnDatas.Count > i) ? columnDatas[i] : string.Empty;
+                var columnData = (columnDatas != null && columnDatas.Count > i) ? columnDatas[i] : string.Empty;
                 config.columns[i] = CreateMasterConfigColumnData(columnNames[i], columnData);
             }
 
             return config;
         }
 
-        private IReadOnlyList<string> GetFirstRecord(IReadOnlyList<IReadOnlyList<string>> records)
-        {
-            if (records == null || records.Count == 0)
-                return null;
-
-            int row = 0;
-            foreach (var record in records)
-                if (++row > 1 && !IsIgnoreRow(row))
-                    return record;
-
-            return null;
-        }
-
-        private bool IsIgnoreRow(int row)
-        {
-            if (_setting == null || _setting.ignoreRowConditions.Length == 0)
-                return false;
-
-            foreach (var ignoreRowCondition in _setting.ignoreRowConditions)
-                if (ignoreRowCondition.IsIgnore(row))
-                    return true;
-
-            return false;
-        }
-
         private MasterConfigData.Column CreateMasterConfigColumnData(string columnName, string data)
         {
-            var column = new MasterConfigData.Column();
-            column.validFlag = true;
-            column.exportFlag = IsExportColumn(columnName);
             columnName = columnName.Replace("#", "");
-            column.name = SnakeToLowerCamel(columnName);
-            column.constantName = $"COLUMN_{SnakeToConstant(columnName)}";
-            column.type = GetDataTypeFromString(data);
-            column.enumType = null;
-            column.enumTypeName = string.Empty;
+            var column = new MasterConfigData.Column
+            {
+                validFlag = true,
+                exportFlag = IsExportColumn(columnName),
+                name = SnakeToLowerCamel(columnName),
+                constantName = $"COLUMN_{SnakeToConstant(columnName)}",
+                type = GetDataTypeFromString(data),
+                enumType = null,
+                enumTypeName = string.Empty
+            };
             return column;
         }
 
@@ -504,11 +484,11 @@ namespace SpreadSheetMaster.Editor
             if (string.IsNullOrEmpty(dataString))
                 return DataType.String;
 
-            if (int.TryParse(dataString, out int intValue))
+            if (int.TryParse(dataString, out var intValue))
                 return DataType.Int;
-            if (float.TryParse(dataString, out float floatValue))
+            if (float.TryParse(dataString, out var floatValue))
                 return DataType.Float;
-            if (bool.TryParse(dataString, out bool boolValue))
+            if (bool.TryParse(dataString, out var boolValue))
                 return DataType.Bool;
 
             return DataType.String;
@@ -550,24 +530,24 @@ namespace SpreadSheetMaster.Editor
         private void ValidationGenerateScript()
         {
             _generateScriptWarning = string.Empty;
-            if (ExportDirectoryPath.IndexOf("Assets/") != 0)
+            if (ExportDirectoryPath.IndexOf("Assets/", StringComparison.Ordinal) != 0)
                 _generateScriptWarning = "生成先フォルダは \"Assets/\"から始まるパスを指定してください。";
 
             if (ExportDirectoryPath.IndexOfAny(Path.GetInvalidPathChars()) >= 0)
                 _generateScriptWarning = "生成先フォルダのパスに使用できない文字が含まれています。";
 
-            string fileName = string.Format("{0}.cs", _editMasterConfig.masterName);
+            var fileName = $"{_editMasterConfig.masterName}.cs";
             if (fileName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || INVALID_FILENAME_REGEX.IsMatch(fileName))
                 _generateScriptWarning = "ファイル名に使用できない文字が含まれています。";
         }
 
         private string GetAssetsPath(string fullPath)
         {
-            int startIndex = fullPath.IndexOf("Assets/", System.StringComparison.Ordinal);
+            var startIndex = fullPath.IndexOf("Assets/", System.StringComparison.Ordinal);
             if (startIndex == -1) startIndex = fullPath.IndexOf("Assets\\", System.StringComparison.Ordinal);
             if (startIndex == -1) return "";
 
-            string assetPath = fullPath.Substring(startIndex);
+            var assetPath = fullPath.Substring(startIndex);
             return assetPath;
         }
 
@@ -589,22 +569,22 @@ namespace SpreadSheetMaster.Editor
 
         private void GenerateMasterScript(string directoryPath, MasterConfigData configData, string namespaceName)
         {
-            string exportPath = string.Format("{0}/{1}.cs", directoryPath, configData.masterName);
+            var exportPath = $"{directoryPath}/{configData.masterName}.cs";
             File.WriteAllText(exportPath, CreateMasterScriptContent(configData, namespaceName));
         }
 
         private void GenerateMasterDataScript(string directoryPath, MasterConfigData configData, string namespaceName)
         {
-            string exportPath = string.Format("{0}/{1}.cs", directoryPath, configData.masterDataName);
+            var exportPath = $"{directoryPath}/{configData.masterDataName}.cs";
             File.WriteAllText(exportPath, CreateMasterDataScriptContent(configData, namespaceName));
         }
 
         private string CreateMasterScriptContent(MasterConfigData configData, string namespaceName)
         {
-            StringBuilder sb = new StringBuilder();
-            int tabCount = 0;
+            var sb = new StringBuilder();
+            var tabCount = 0;
 
-            bool namespaceExistFlag = !string.IsNullOrEmpty(namespaceName);
+            var namespaceExistFlag = !string.IsNullOrEmpty(namespaceName);
 
             AppendTab(sb, tabCount).Append("using SpreadSheetMaster;").AppendLine();
             sb.AppendLine();
@@ -633,13 +613,13 @@ namespace SpreadSheetMaster.Editor
 
         private string CreateMasterDataScriptContent(MasterConfigData configData, string namespaceName)
         {
-            StringBuilder sb = new StringBuilder();
-            int tabCount = 0;
+            var sb = new StringBuilder();
+            var tabCount = 0;
 
-            bool namespaceExistFlag = !string.IsNullOrEmpty(namespaceName);
+            var namespaceExistFlag = !string.IsNullOrEmpty(namespaceName);
 
             var indexColumnList = new List<System.Tuple<int, MasterConfigData.Column>>();
-            for (int i = 0; i < configData.columns.Length; i++)
+            for (var i = 0; i < configData.columns.Length; i++)
             {
                 var column = configData.columns[i];
                 if (column.exportFlag && column.validFlag)
@@ -690,7 +670,7 @@ namespace SpreadSheetMaster.Editor
             AppendTab(sb, tabCount++).Append("{").AppendLine();
 
             AppendTab(sb, tabCount++).AppendFormat("return \"{0} [\" +", configData.masterDataName).AppendLine();
-            for (int i = 0; i < indexColumnList.Count; i++)
+            for (var i = 0; i < indexColumnList.Count; i++)
             {
                 var tuple = indexColumnList[i];
                 AppendTab(sb, tabCount).AppendFormat("\"{0}=\" + {0} +{1}",

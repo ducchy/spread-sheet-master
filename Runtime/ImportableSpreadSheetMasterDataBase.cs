@@ -1,61 +1,61 @@
 namespace SpreadSheetMaster
 {
-	using System;
-	using System.Collections.Generic;
-	using UnityEngine;
+    using System;
+    using System.Collections.Generic;
+    using UnityEngine;
 
-	public abstract class ImportableSpreadSheetMasterDataBase : IImportableSpreadSheetMasterData
-	{
-		public abstract int GetId();
-		public abstract void SetData(IReadOnlyList<string> record);
+    public abstract class ImportableSpreadSheetMasterDataBase : IImportableSpreadSheetMasterData
+    {
+        public abstract int GetId();
+        public abstract void SetData(IReadOnlyList<string> record);
 
-		protected string GetString(IReadOnlyList<string> record, int column)
-		{
-			if (record != null && 0 <= column && column < record.Count)
-				return record[column];
+        protected string GetString(IReadOnlyList<string> record, int column)
+        {
+            if (record != null && 0 <= column && column < record.Count)
+                return record[column];
 
-			Debug.LogErrorFormat("Index out of range. index={0}", column);
-			return string.Empty;
-		}
+            Debug.LogErrorFormat("Index out of range. index={0}", column);
+            return string.Empty;
+        }
 
-		protected int GetInt(IReadOnlyList<string> record, int column)
-		{
-			string str = GetString(record, column);
-			if (int.TryParse(str, out int result))
-				return result;
+        protected int GetInt(IReadOnlyList<string> record, int column)
+        {
+            var str = GetString(record, column);
+            if (int.TryParse(str, out int result))
+                return result;
 
-			Debug.LogErrorFormat("Could not parse \"{0}\" to int.", str);
-			return default(int);
-		}
+            Debug.LogErrorFormat("Could not parse \"{0}\" to int.", str);
+            return default(int);
+        }
 
-		protected float GetFloat(IReadOnlyList<string> record, int column)
-		{
-			string str = GetString(record, column);
-			if (float.TryParse(str, out float result))
-				return result;
+        protected float GetFloat(IReadOnlyList<string> record, int column)
+        {
+            var str = GetString(record, column);
+            if (float.TryParse(str, out float result))
+                return result;
 
-			Debug.LogErrorFormat("Could not parse \"{0}\" to float.", str);
-			return default(float);
-		}
+            Debug.LogErrorFormat("Could not parse \"{0}\" to float.", str);
+            return default(float);
+        }
 
-		protected bool GetBool(IReadOnlyList<string> record, int column)
-		{
-			string str = GetString(record, column);
-			if (bool.TryParse(str, out bool result))
-				return result;
+        protected bool GetBool(IReadOnlyList<string> record, int column)
+        {
+            var str = GetString(record, column);
+            if (bool.TryParse(str, out bool result))
+                return result;
 
-			Debug.LogErrorFormat("Could not parse \"{0}\" to bool.", str);
-			return default(bool);
-		}
+            Debug.LogErrorFormat("Could not parse \"{0}\" to bool.", str);
+            return default(bool);
+        }
 
-		protected T GetEnum<T>(IReadOnlyList<string> record, int column, T @default = default(T)) where T : struct
-		{
-			string str = GetString(record, column);
-			if (Enum.TryParse(str, out T result))
-				return result;
+        protected T GetEnum<T>(IReadOnlyList<string> record, int column, T @default = default(T)) where T : struct
+        {
+            var str = GetString(record, column);
+            if (Enum.TryParse(str, out T result))
+                return result;
 
-			Debug.LogErrorFormat("Could not parse {0} to {1}.", str, typeof(T).Name);
-			return @default;
-		}
-	}
+            Debug.LogErrorFormat("Could not parse {0} to {1}.", str, typeof(T).Name);
+            return @default;
+        }
+    }
 }

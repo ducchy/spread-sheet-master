@@ -31,7 +31,8 @@ namespace SpreadSheetMaster
 
             if (request.result == UnityWebRequest.Result.Success)
             {
-                if (request.downloadHandler.text.IndexOf("https://accounts.google.com/v3/signin/", StringComparison.Ordinal) != -1)
+                if (request.downloadHandler.text.IndexOf("https://accounts.google.com/v3/signin/",
+                        StringComparison.Ordinal) != -1)
                     onError?.Invoke("サインインが要求されました。\nスプレッドシートの公開設定を変更してください。");
                 else
                     onSuccess?.Invoke(request.downloadHandler.text);
