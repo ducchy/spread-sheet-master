@@ -8,8 +8,10 @@ namespace SpreadSheetMaster.Samples
 	{
 		private const string OVERWRITE_SPREAD_SHEET_ID = "1cjSUtkl0frO8OjBKWNPfBYMGpPzLnTAz3ZGiwK6pNo8";
 
+		[SerializeField] private SpreadSheetSetting _setting;
+		
 		private readonly CharacterMaster _characterMaster = new CharacterMaster();
-		private readonly SpreadSheetMasterImporter _importer = new SpreadSheetMasterImporter();
+		private SpreadSheetMasterImporter _importer;
 
 		private readonly CancellationTokenSource _cts = new CancellationTokenSource();
 		private CancellationToken ct => _cts.Token;
@@ -17,6 +19,8 @@ namespace SpreadSheetMaster.Samples
 
 		private void Start()
 		{
+			_importer = new SpreadSheetMasterImporter(_setting);
+			
 			ImportMasterAllAsync();
 		}
 

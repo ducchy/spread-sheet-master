@@ -7,7 +7,7 @@ namespace SpreadSheetMaster
 
 	public class SheetDownloader
 	{
-		private const string URI_FORMAT = "https://docs.google.com/spreadsheets/d/{0}/gviz/tq?tqx=out:csv&sheet={1}";
+		private const string URI_FORMAT = "https://docs.google.com/spreadsheets/d/{0}/export?format=csv&gid={1}";
 
 		public async Task DownloadSheetAsync(string spreadSheetId, string sheetName, System.Action<string> onSuccess, System.Action<string> onError, CancellationToken ct)
 		{

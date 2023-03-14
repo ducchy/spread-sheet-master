@@ -6,8 +6,15 @@ namespace SpreadSheetMaster
 
 	public class SpreadSheetMasterImporter
 	{
-		private CsvParser _parser = new CsvParser();
+		private readonly SpreadSheetSetting _setting;
+		private readonly CsvParser _parser;
 
+		public SpreadSheetMasterImporter(SpreadSheetSetting setting)
+		{
+			_setting = setting;
+			_parser = new CsvParser(_setting != null ? _setting.ignoreRowConditions : null);
+		}
+		
 		public async Task ImportFromSpreadSheetAsync(IImportableSpreadSheetMaster master, System.Action<string> onError, CancellationToken ct)
 		{
 			string csv = string.Empty;
