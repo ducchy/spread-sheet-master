@@ -5,10 +5,10 @@ namespace SpreadSheetMaster.Samples
 {
 	public partial class CharacterMasterData : ImportableSpreadSheetMasterDataBase
 	{
-		private const int COLUMN_ID = 0;
-		private const int COLUMN_NAME = 1;
-		private const int COLUMN_AGE = 2;
-		private const int COLUMN_GENDER = 3;
+		private const int COLUMN_ID = 1;
+		private const int COLUMN_NAME = 2;
+		private const int COLUMN_AGE = 3;
+		private const int COLUMN_GENDER = 4;
 
 		public int id { get; private set; }
 		public string name { get; private set; }
