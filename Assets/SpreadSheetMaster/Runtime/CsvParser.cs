@@ -27,9 +27,6 @@ namespace SpreadSheetMaster
             {
                 var line = reader.ReadLine();
 
-                if (IsIgnoreRow(row++))
-                    continue;
-
                 var columns = new List<string>();
                 if (line != null)
                 {
@@ -44,18 +41,21 @@ namespace SpreadSheetMaster
                     }
                 }
 
+                if (IsIgnoreRow(row++, columns))
+                    continue;
+
                 records.Add(columns);
             }
 
             return records;
         }
 
-        private bool IsIgnoreRow(int row)
+        private bool IsIgnoreRow(int row, List<string> columns)
         {
             if (_ignoreRowConditions == null || _ignoreRowConditions.Length == 0)
                 return false;
 
-            return _ignoreRowConditions.Any(ignoreRowCondition => ignoreRowCondition.IsIgnore(row));
+            return _ignoreRowConditions.Any(ignoreRowCondition => ignoreRowCondition.IsIgnore(row, columns));
         }
     }
 }
