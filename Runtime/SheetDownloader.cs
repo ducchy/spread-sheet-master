@@ -9,21 +9,34 @@ namespace SpreadSheetMaster
 
     public class SheetDownloader
     {
-        private const string URI_FORMAT = "https://docs.google.com/spreadsheets/d/{0}/export?format=csv&gid={1}";
+        private readonly SheetUrlBuilder _sheetUrlBuilder = new SheetUrlBuilder();
 
-        // ReSharper disable Unity.PerformanceAnalysis
         public async Task DownloadSheetAsync(string spreadSheetId, string sheetId, Action<string> onSuccess,
-            System.Action<string> onError, CancellationToken ct)
+            Action<string> onError, CancellationToken token)
         {
-            var request = UnityWebRequest.Get(string.Format(URI_FORMAT, spreadSheetId, sheetId));
+            var url = _sheetUrlBuilder.BuildExportUrl(spreadSheetId, sheetId);
+            await DownloadSheetAsyncInternal(url, onSuccess, onError, token);
+        }
+
+        public async Task DownloadSheetBySheetNameAsync(string spreadSheetId, string sheetName, Action<string> onSuccess,
+            Action<string> onError, CancellationToken token)
+        {
+            var url = _sheetUrlBuilder.BuildExportUrlBySheetName(spreadSheetId, sheetName);
+            await DownloadSheetAsyncInternal(url, onSuccess, onError, token);
+        }
+
+        private async Task DownloadSheetAsyncInternal(string url, Action<string> onSuccess,
+            Action<string> onError, CancellationToken token)
+        {
+            var request = UnityWebRequest.Get(url);
             _ = request.SendWebRequest();
 
             while (!request.isDone)
             {
-                if (ct.IsCancellationRequested)
+                if (token.IsCancellationRequested)
                 {
                     Debug.Log("Task {0} cancelled");
-                    ct.ThrowIfCancellationRequested();
+                    token.ThrowIfCancellationRequested();
                 }
 
                 await Task.Yield();

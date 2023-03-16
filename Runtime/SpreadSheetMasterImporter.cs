@@ -8,6 +8,7 @@ namespace SpreadSheetMaster
     {
         private readonly SpreadSheetSetting _setting;
         private readonly CsvParser _parser;
+        private readonly SheetDownloader _sheetDownloader = new SheetDownloader();
 
         public SpreadSheetMasterImporter(SpreadSheetSetting setting)
         {
@@ -19,9 +20,7 @@ namespace SpreadSheetMaster
             CancellationToken ct)
         {
             var csv = string.Empty;
-
-            var downloader = new SheetDownloader();
-            await downloader.DownloadSheetAsync(master.spreadSheetId, master.sheetId, (str) => csv = str, onError, ct);
+            await _sheetDownloader.DownloadSheetAsync(master.spreadSheetId, master.sheetId, (str) => csv = str, onError, ct);
 
             ImportFromCsv(master, csv);
         }
@@ -43,9 +42,7 @@ namespace SpreadSheetMaster
             if (csv == string.Empty)
                 return;
 
-            master.PreImport();
             master.Import(_parser.Parse(csv, excludeHeader: true));
-            master.PostImport();
         }
     }
 }
