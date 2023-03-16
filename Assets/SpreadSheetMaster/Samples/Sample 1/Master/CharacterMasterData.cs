@@ -1,33 +1,36 @@
 using SpreadSheetMaster;
 using System.Collections.Generic;
 
-public partial class CharacterMasterData : ImportableSpreadSheetMasterDataBase
+namespace SpreadSheetMaster.Samples
 {
-	private const int ColumnId = 1;
-	private const int ColumnName = 2;
-	private const int ColumnAge = 3;
-
-	public int Id { get; private set; }
-	public string Name { get; private set; }
-	public int Age { get; private set; }
-
-	public override int GetId()
+	public partial class CharacterMasterData : ImportableSpreadSheetMasterDataBase
 	{
-		return Id;
-	}
+		private const int ColumnId = 1;
+		private const int ColumnName = 2;
+		private const int ColumnAge = 3;
 
-	protected override void SetDataInternal(IReadOnlyList<string> record)
-	{
-		Id = GetInt(record, ColumnId);
-		Name = GetString(record, ColumnName);
-		Age = GetInt(record, ColumnAge);
-	}
-	public override string ToString()
-	{
-		return "CharacterMasterData [" +
-			"Id=" + Id + ", " +
-			"Name=" + Name + ", " +
-			"Age=" + Age +
-			"]";
+		public int Id { get; private set; }
+		public string Name { get; private set; }
+		public int Age { get; private set; }
+
+		public override int GetId()
+		{
+			return Id;
+		}
+
+		protected override void SetDataInternal(IReadOnlyList<string> record)
+		{
+			Id = GetInt(record, ColumnId);
+			Name = GetString(record, ColumnName);
+			Age = GetInt(record, ColumnAge);
+		}
+		public override string ToString()
+		{
+			return "CharacterMasterData [" +
+				"Id=" + Id + ", " +
+				"Name=" + Name + ", " +
+				"Age=" + Age +
+				"]";
+		}
 	}
 }
