@@ -8,5 +8,8 @@ namespace SpreadSheetMaster
 		string sheetId { get; }
 
 		void Import(IReadOnlyList<IReadOnlyList<string>> records);
+		
+		void OverwriteSpreadSheetId(string spreadSheetId);
+		void ClearOverwriteSpreadSheetId();
 	}
 }
