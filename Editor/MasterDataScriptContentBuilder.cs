@@ -35,7 +35,7 @@ namespace SpreadSheetMaster.Editor
         private void AppendBeginNamespaceIfNeeded(string namespaceName)
         {
             ;
-            if (!string.IsNullOrEmpty(namespaceName))
+            if (string.IsNullOrEmpty(namespaceName))
                 return;
 
             _sb.AppendTab(_tabCount).AppendFormat("namespace {0}", namespaceName).AppendLine();
@@ -137,8 +137,7 @@ namespace SpreadSheetMaster.Editor
 
         private void AppendEndNamespaceIfNeeded(string namespaceName)
         {
-            ;
-            if (!string.IsNullOrEmpty(namespaceName))
+            if (string.IsNullOrEmpty(namespaceName))
                 return;
 
             _sb.AppendTab(--_tabCount).Append("}").AppendLine();
