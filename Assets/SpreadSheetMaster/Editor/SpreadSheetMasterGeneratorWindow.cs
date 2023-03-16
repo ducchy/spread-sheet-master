@@ -1,11 +1,11 @@
 using System;
+using System.Threading.Tasks;
 
 namespace SpreadSheetMaster.Editor
 {
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-    using System.Text;
     using System.Threading;
     using UnityEditor;
     using UnityEngine;
@@ -20,37 +20,7 @@ namespace SpreadSheetMaster.Editor
             window.Focus();
         }
 
-        [System.Serializable]
-        private class MasterConfigData
-        {
-            [System.Serializable]
-            public class Column
-            {
-                public bool validFlag;
-                public bool exportFlag;
-                public string name;
-                public string constantName;
-                public DataType type;
-                public string typeName => type == DataType.Enum ? enumTypeName : type.ToString().ToLower();
-                public System.Type enumType;
-                public string enumTypeName;
-            }
-
-            public string masterName;
-            public string masterDataName => masterName + "Data";
-            public string spreadSheetId;
-            public string sheetId;
-            public Column[] columns;
-        }
-
         private const string DEFAULT_DIRECTORY_PATH = "Assets/";
-
-        private readonly System.Text.RegularExpressions.Regex INVALID_FILENAME_REGEX =
-            new System.Text.RegularExpressions.Regex(
-                "[\\x00-\\x1f<>:\"/\\\\|?*]" +
-                "|^(CON|PRN|AUX|NUL|COM[0-9]|LPT[0-9]|CLOCK\\$)(\\.|$)" +
-                "|[\\. ]$",
-                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
         [SerializeField] private SpreadSheetSetting _setting;
         [SerializeField] private int _spreadSheetIndex = 0;
@@ -70,15 +40,16 @@ namespace SpreadSheetMaster.Editor
         private Vector2 _scrollPositionCsvPreview;
         private Vector2 _scrollPositionColumns;
 
+        private readonly SheetUrlBuilder _sheetUrlBuilder = new SheetUrlBuilder();
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
-        private CancellationToken ct => _cts.Token;
+        private CancellationToken _token => _cts.Token;
 
-        private string ExportDirectoryPath => _setting != null ? _setting.exportDirectoryPath : _directoryPath;
+        private string ExportDirectoryPath => _setting != null ? _setting.exportScriptDirectoryPath : _directoryPath;
         private string NamespaceName => _setting != null ? _setting.namespaceName : _namespaceName;
 
         private SpreadSheetData SpreadSheetData => (_setting != null && 0 <= _spreadSheetIndex &&
-                                                    _spreadSheetIndex < _setting.spreadSheetDatas.Length)
-            ? _setting.spreadSheetDatas[_spreadSheetIndex]
+                                                    _spreadSheetIndex < _setting.spreadSheetDataArray.Length)
+            ? _setting.spreadSheetDataArray[_spreadSheetIndex]
             : null;
 
         private string SpreadSheetId
@@ -91,8 +62,8 @@ namespace SpreadSheetMaster.Editor
         }
 
         private SheetData SheetData => (_setting != null && 0 <= _sheetIndex &&
-                                        _sheetIndex < _setting.sheetDatas.Length)
-            ? _setting.sheetDatas[_sheetIndex]
+                                        _sheetIndex < _setting.sheetDataArray.Length)
+            ? _setting.sheetDataArray[_sheetIndex]
             : null;
 
         private string SheetId
@@ -111,14 +82,6 @@ namespace SpreadSheetMaster.Editor
                 var sd = SheetData;
                 return sd != null ? sd.masterName : _masterName;
             }
-        }
-
-        private void OnEnable()
-        {
-        }
-
-        private void OnDisable()
-        {
         }
 
         private void OnDestroy()
@@ -158,7 +121,7 @@ namespace SpreadSheetMaster.Editor
 
         private void DrawImportSetting()
         {
-            EditorGUILayout.LabelField("インポート設定", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("シート設定", EditorStyles.boldLabel);
 
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
@@ -178,9 +141,9 @@ namespace SpreadSheetMaster.Editor
                 if (_setting != null)
                 {
                     _spreadSheetIndex = EditorGUILayout.Popup("スプレッドシート", _spreadSheetIndex,
-                        _setting.spreadSheetDatas.Select(ssd => ssd.name).ToArray());
+                        _setting.spreadSheetDataArray.Select(ssd => ssd.name).ToArray());
                     _sheetIndex = EditorGUILayout.Popup("シート", _sheetIndex,
-                        _setting.sheetDatas.Select(sd => sd.name).ToArray());
+                        _setting.sheetDataArray.Select(sd => sd.name).ToArray());
                 }
 
                 using (new EditorGUI.DisabledScope(_setting != null))
@@ -207,8 +170,11 @@ namespace SpreadSheetMaster.Editor
                         _downloadSheetError = string.Empty;
                         EditorGUIUtility.editingTextField = false;
 
-                        DownloadSheetAsync();
+                        DownloadSheetAsync(_token);
                     }
+
+                    if (GUILayout.Button("ブラウザで開く"))
+                        Application.OpenURL(_sheetUrlBuilder.BuildEditUrl(SpreadSheetId, SheetId));
                 }
 
                 if (!string.IsNullOrEmpty(_downloadSheetError))
@@ -241,19 +207,42 @@ namespace SpreadSheetMaster.Editor
             }
         }
 
-        private async void DownloadSheetAsync()
+        private async void DownloadSheetAsync(CancellationToken token)
+        {
+            await DownloadSheetAsync(SpreadSheetId, SheetId, SheetMasterName, token);
+        }
+
+        private async Task DownloadSheetAsync(string spreadSheetId, string sheetId, string sheetMasterName,
+            CancellationToken token)
         {
             var downloader = new SheetDownloader();
-            await downloader.DownloadSheetAsync(SpreadSheetId, SheetId, (response) =>
+            await downloader.DownloadSheetAsync(spreadSheetId, sheetId, (response) =>
             {
                 _downloadText = response;
-                _editMasterConfig = ParseCsvToConfig(_downloadText, SpreadSheetId, SheetId, SheetMasterName);
+                _editMasterConfig = ParseCsvToConfig(_downloadText, spreadSheetId, sheetId, sheetMasterName);
                 _downloadingFlag = false;
             }, (error) =>
             {
                 _downloadSheetError = error;
                 _downloadingFlag = false;
-            }, ct);
+            }, token);
+        }
+
+        private async void DownloadAndExportSheetAllAsync(string spreadSheetId, CancellationToken token)
+        {
+            var sheetDataList = _setting.sheetDataArray;
+            foreach (var sheetData in sheetDataList)
+            {
+                await DownloadSheetAsync(spreadSheetId, sheetData.id, sheetData.masterName, token);
+
+                ValidationGenerateScript();
+                if (!string.IsNullOrEmpty(_generateScriptWarning))
+                    continue;
+
+                GenerateMasterAndMasterDataScript(_editMasterConfig, false);
+            }
+
+            AssetDatabase.Refresh();
         }
 
         private void DrawEditMasterConfig()
@@ -301,18 +290,18 @@ namespace SpreadSheetMaster.Editor
                     {
                         _scrollPositionColumns = scroll.scrollPosition;
 
-                        for (int i = 0; i < _editMasterConfig.columns.Length; ++i)
+                        for (var i = 0; i < _editMasterConfig.columns.Length; ++i)
                         {
                             var column = _editMasterConfig.columns[i];
 
-                            if (string.IsNullOrWhiteSpace(column.name))
+                            if (string.IsNullOrWhiteSpace(column.propertyName))
                                 continue;
 
                             using (new EditorGUILayout.HorizontalScope())
                             {
                                 EditorGUILayout.LabelField(column.validFlag ? "○" : "×", GUILayout.MaxWidth(20));
                                 column.exportFlag = EditorGUILayout.Toggle(column.exportFlag, GUILayout.MaxWidth(40));
-                                EditorGUILayout.LabelField(column.name, GUILayout.MaxWidth(200));
+                                EditorGUILayout.LabelField(column.propertyName, GUILayout.MaxWidth(200));
                                 DataType dataType =
                                     (DataType)EditorGUILayout.EnumPopup(column.type, GUILayout.MaxWidth(80));
 
@@ -323,7 +312,7 @@ namespace SpreadSheetMaster.Editor
 
                                     if (GUILayout.Button("適用", GUILayout.MaxWidth(40)))
                                     {
-                                        Type type =
+                                        var type =
                                             Type.GetType(column.enumTypeName + ", Assembly-CSharp.dll");
                                         var isEnum = type != null && type.IsEnum;
                                         column.validFlag = isEnum;
@@ -386,8 +375,11 @@ namespace SpreadSheetMaster.Editor
                 using (new EditorGUI.DisabledScope(!string.IsNullOrEmpty(_generateScriptWarning)))
                 {
                     if (GUILayout.Button("生成"))
-                        GenerateMasterAndMasterDataScript(_editMasterConfig);
+                        GenerateMasterAndMasterDataScript(_editMasterConfig, true);
                 }
+
+                if (GUILayout.Button("一括生成"))
+                    DownloadAndExportSheetAllAsync(SpreadSheetId, _token);
             }
         }
 
@@ -424,7 +416,7 @@ namespace SpreadSheetMaster.Editor
         {
             var config = new MasterConfigData
             {
-                masterName = SnakeToUpperCamel(masterName + "Master"),
+                masterName = StringUtility.SnakeToUpperCamel(masterName + "Master"),
                 spreadSheetId = spreadSheetId,
                 sheetId = sheetId
             };
@@ -432,31 +424,47 @@ namespace SpreadSheetMaster.Editor
             if (records == null || records.Count == 0)
                 return config;
 
-            var columnNames = records[0];
-            var columnDatas = records.Count > 1 ? records[1] : null;
-            var columnCount = columnNames.Count;
+            var columnNameList = records[0];
+            var columnDataList = records.Count > 1 ? records[1] : null;
+            var columnCount = columnNameList.Count;
             if (columnCount == 0)
                 return config;
 
-            config.columns = new MasterConfigData.Column[columnCount];
+            config.columns = new MasterColumnConfigData[columnCount];
             for (var i = 0; i < columnCount; i++)
             {
-                var columnData = (columnDatas != null && columnDatas.Count > i) ? columnDatas[i] : string.Empty;
-                config.columns[i] = CreateMasterConfigColumnData(columnNames[i], columnData);
+                var columnData = (columnDataList != null && columnDataList.Count > i)
+                    ? columnDataList[i]
+                    : string.Empty;
+                var columnName = columnNameList[i];
+                var column = CreateMasterConfigColumnData(columnName, columnData);
+                if (columnName == "id")
+                    config._idMasterColumnConfigData = column;
+                config.columns[i] = column;
             }
 
             return config;
         }
 
-        private MasterConfigData.Column CreateMasterConfigColumnData(string columnName, string data)
+        private MasterColumnConfigData CreateMasterConfigColumnData(string columnName, string data)
         {
-            columnName = columnName.Replace("#", "");
-            var column = new MasterConfigData.Column
+            var exportFlag = IsExportColumn(columnName);
+            if (!exportFlag)
+            {
+                return new MasterColumnConfigData()
+                {
+                    exportFlag = false,
+                };
+            }
+
+            var column = new MasterColumnConfigData()
             {
                 validFlag = true,
-                exportFlag = IsExportColumn(columnName),
-                name = SnakeToLowerCamel(columnName),
-                constantName = $"COLUMN_{SnakeToConstant(columnName)}",
+                exportFlag = true,
+                propertyName = StringUtility.Convert(columnName, _setting.columnNameNamingConvention,
+                    _setting.propertyNamingConvention),
+                constantName = StringUtility.Convert("column_" + columnName, _setting.columnNameNamingConvention,
+                    _setting.constantNamingConvention),
                 type = GetDataTypeFromString(data),
                 enumType = null,
                 enumTypeName = string.Empty
@@ -472,11 +480,8 @@ namespace SpreadSheetMaster.Editor
             if (_setting == null)
                 return columnName.IndexOf("#", StringComparison.Ordinal) == -1;
 
-            foreach (var ignoreColumnCondition in _setting.ignoreColumnConditions)
-                if (ignoreColumnCondition.IsIgnore(columnName))
-                    return false;
-
-            return true;
+            return _setting.ignoreColumnConditions.All(ignoreColumnCondition =>
+                !ignoreColumnCondition.IsIgnore(columnName));
         }
 
         private DataType GetDataTypeFromString(string dataString)
@@ -494,34 +499,6 @@ namespace SpreadSheetMaster.Editor
             return DataType.String;
         }
 
-        private string SnakeToUpperCamel(string snake)
-        {
-            if (string.IsNullOrEmpty(snake))
-                return snake;
-
-            return snake
-                .Split(new[] { '_' }, System.StringSplitOptions.RemoveEmptyEntries)
-                .Select(s => char.ToUpperInvariant(s[0]) + s.Substring(1, s.Length - 1))
-                .Aggregate(string.Empty, (s1, s2) => s1 + s2);
-        }
-
-        private string SnakeToLowerCamel(string snake)
-        {
-            if (string.IsNullOrEmpty(snake))
-                return snake;
-
-            return SnakeToUpperCamel(snake)
-                .Insert(0, char.ToLowerInvariant(snake[0]).ToString()).Remove(1, 1);
-        }
-
-        private string SnakeToConstant(string snake)
-        {
-            if (string.IsNullOrEmpty(snake))
-                return snake;
-
-            return snake.ToUpper();
-        }
-
         #endregion create_config_data
 
 
@@ -530,15 +507,30 @@ namespace SpreadSheetMaster.Editor
         private void ValidationGenerateScript()
         {
             _generateScriptWarning = string.Empty;
-            if (ExportDirectoryPath.IndexOf("Assets/", StringComparison.Ordinal) != 0)
-                _generateScriptWarning = "生成先フォルダは \"Assets/\"から始まるパスを指定してください。";
+            if (_editMasterConfig._idMasterColumnConfigData == null)
+            {
+                _generateScriptWarning = "\"id\"カラムを設定してください。";
+                return;
+            }
 
-            if (ExportDirectoryPath.IndexOfAny(Path.GetInvalidPathChars()) >= 0)
+            if (ExportDirectoryPath.IndexOf("Assets/", StringComparison.Ordinal) != 0)
+            {
+                _generateScriptWarning = "生成先フォルダは \"Assets/\"から始まるパスを指定してください。";
+                return;
+            }
+
+            if (StringUtility.IsExistInvalidPathChars(_directoryPath))
+            {
                 _generateScriptWarning = "生成先フォルダのパスに使用できない文字が含まれています。";
+                return;
+            }
 
             var fileName = $"{_editMasterConfig.masterName}.cs";
-            if (fileName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || INVALID_FILENAME_REGEX.IsMatch(fileName))
+            if (StringUtility.IsExistInvalidFileNameChars(fileName))
+            {
                 _generateScriptWarning = "ファイル名に使用できない文字が含まれています。";
+                return;
+            }
         }
 
         private string GetAssetsPath(string fullPath)
@@ -551,14 +543,15 @@ namespace SpreadSheetMaster.Editor
             return assetPath;
         }
 
-        private void GenerateMasterAndMasterDataScript(MasterConfigData configData)
+        private void GenerateMasterAndMasterDataScript(MasterConfigData configData, bool withRefresh)
         {
             CreateDirectoryIfNeeded(ExportDirectoryPath);
 
             GenerateMasterScript(ExportDirectoryPath, configData, NamespaceName);
             GenerateMasterDataScript(ExportDirectoryPath, configData, NamespaceName);
 
-            AssetDatabase.Refresh();
+            if (withRefresh)
+                AssetDatabase.Refresh();
         }
 
         private void CreateDirectoryIfNeeded(string directoryPath)
@@ -570,130 +563,15 @@ namespace SpreadSheetMaster.Editor
         private void GenerateMasterScript(string directoryPath, MasterConfigData configData, string namespaceName)
         {
             var exportPath = $"{directoryPath}/{configData.masterName}.cs";
-            File.WriteAllText(exportPath, CreateMasterScriptContent(configData, namespaceName));
+            var builder = new MasterScriptContentBuilder();
+            File.WriteAllText(exportPath, builder.Build(configData, namespaceName));
         }
 
         private void GenerateMasterDataScript(string directoryPath, MasterConfigData configData, string namespaceName)
         {
             var exportPath = $"{directoryPath}/{configData.masterDataName}.cs";
-            File.WriteAllText(exportPath, CreateMasterDataScriptContent(configData, namespaceName));
-        }
-
-        private string CreateMasterScriptContent(MasterConfigData configData, string namespaceName)
-        {
-            var sb = new StringBuilder();
-            var tabCount = 0;
-
-            var namespaceExistFlag = !string.IsNullOrEmpty(namespaceName);
-
-            AppendTab(sb, tabCount).Append("using SpreadSheetMaster;").AppendLine();
-            sb.AppendLine();
-
-            if (namespaceExistFlag)
-            {
-                AppendTab(sb, tabCount).AppendFormat("namespace {0}", namespaceName).AppendLine();
-                AppendTab(sb, tabCount++).Append("{").AppendLine();
-            }
-
-            AppendTab(sb, tabCount).AppendFormat("public partial class {0} : ImportableSpreadSheetMasterBase<{1}>",
-                configData.masterName, configData.masterDataName).AppendLine();
-            AppendTab(sb, tabCount++).Append("{").AppendLine();
-            AppendTab(sb, tabCount)
-                .AppendFormat("public override string defaultSpreadSheetId => \"{0}\";", configData.spreadSheetId)
-                .AppendLine();
-            AppendTab(sb, tabCount).AppendFormat("public override string sheetId => \"{0}\";", configData.sheetId)
-                .AppendLine();
-            AppendTab(sb, --tabCount).Append("}").AppendLine();
-
-            if (namespaceExistFlag)
-                AppendTab(sb, --tabCount).Append("}").AppendLine();
-
-            return sb.ToString();
-        }
-
-        private string CreateMasterDataScriptContent(MasterConfigData configData, string namespaceName)
-        {
-            var sb = new StringBuilder();
-            var tabCount = 0;
-
-            var namespaceExistFlag = !string.IsNullOrEmpty(namespaceName);
-
-            var indexColumnList = new List<System.Tuple<int, MasterConfigData.Column>>();
-            for (var i = 0; i < configData.columns.Length; i++)
-            {
-                var column = configData.columns[i];
-                if (column.exportFlag && column.validFlag)
-                    indexColumnList.Add(System.Tuple.Create(i, column));
-            }
-
-            AppendTab(sb, tabCount).Append("using SpreadSheetMaster;").AppendLine();
-            AppendTab(sb, tabCount).Append("using System.Collections.Generic;").AppendLine();
-            sb.AppendLine();
-
-            if (namespaceExistFlag)
-            {
-                AppendTab(sb, tabCount).AppendFormat("namespace {0}", namespaceName).AppendLine();
-                AppendTab(sb, tabCount++).Append("{").AppendLine();
-            }
-
-            AppendTab(sb, tabCount).AppendFormat("public partial class {0} : ImportableSpreadSheetMasterDataBase",
-                configData.masterDataName).AppendLine();
-            AppendTab(sb, tabCount++).Append("{").AppendLine();
-
-            foreach (var tuple in indexColumnList)
-                AppendTab(sb, tabCount)
-                    .AppendFormat("private const int {0} = {1};", tuple.Item2.constantName, tuple.Item1).AppendLine();
-
-            sb.AppendLine();
-
-            foreach (var tuple in indexColumnList)
-                AppendTab(sb, tabCount).AppendFormat("public {0} {1} ", tuple.Item2.typeName, tuple.Item2.name)
-                    .Append("{ get; private set; }").AppendLine();
-
-            sb.AppendLine();
-
-            AppendTab(sb, tabCount).Append("public override int GetId()").AppendLine();
-            AppendTab(sb, tabCount++).Append("{").AppendLine();
-            AppendTab(sb, tabCount).Append("return id;").AppendLine();
-            AppendTab(sb, --tabCount).Append("}").AppendLine();
-
-            AppendTab(sb, tabCount).Append("public override void SetData(IReadOnlyList<string> record)").AppendLine();
-            AppendTab(sb, tabCount++).Append("{").AppendLine();
-
-            foreach (var tuple in indexColumnList)
-                AppendTab(sb, tabCount).AppendFormat("{0} = Get{1}(record, {2});", tuple.Item2.name,
-                    tuple.Item2.type.ToString(), tuple.Item2.constantName).AppendLine();
-
-            AppendTab(sb, --tabCount).Append("}").AppendLine();
-
-            AppendTab(sb, tabCount).Append("public override string ToString()").AppendLine();
-            AppendTab(sb, tabCount++).Append("{").AppendLine();
-
-            AppendTab(sb, tabCount++).AppendFormat("return \"{0} [\" +", configData.masterDataName).AppendLine();
-            for (var i = 0; i < indexColumnList.Count; i++)
-            {
-                var tuple = indexColumnList[i];
-                AppendTab(sb, tabCount).AppendFormat("\"{0}=\" + {0} +{1}",
-                        tuple.Item2.name,
-                        (i >= indexColumnList.Count - 1 ? string.Empty : (" \", \" +")))
-                    .AppendLine();
-            }
-
-            AppendTab(sb, tabCount--).Append("\"]\";").AppendLine();
-
-            AppendTab(sb, --tabCount).Append("}").AppendLine();
-
-            AppendTab(sb, --tabCount).Append("}").AppendLine();
-
-            if (namespaceExistFlag)
-                AppendTab(sb, --tabCount).Append("}").AppendLine();
-
-            return sb.ToString();
-        }
-
-        private StringBuilder AppendTab(StringBuilder sb, int tabCount)
-        {
-            return sb.Append('\t', tabCount);
+            var builder = new MasterDataScriptContentBuilder();
+            File.WriteAllText(exportPath, builder.Build(configData, namespaceName));
         }
 
         #endregion export_master_script

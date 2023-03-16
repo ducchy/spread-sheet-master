@@ -7,8 +7,6 @@ namespace SpreadSheetMaster
 		string spreadSheetId { get; }
 		string sheetId { get; }
 
-		void PreImport();
 		void Import(IReadOnlyList<IReadOnlyList<string>> records);
-		void PostImport();
 	}
 }

@@ -7,7 +7,18 @@ namespace SpreadSheetMaster
     public abstract class ImportableSpreadSheetMasterDataBase : IImportableSpreadSheetMasterData
     {
         public abstract int GetId();
-        public abstract void SetData(IReadOnlyList<string> record);
+
+        public void SetData(IReadOnlyList<string> record)
+        {
+            SetDataInternal(record);
+            SetCustomData(record);
+        }
+
+        protected abstract void SetDataInternal(IReadOnlyList<string> record);
+
+        protected virtual void SetCustomData(IReadOnlyList<string> record)
+        {
+        }
 
         protected string GetString(IReadOnlyList<string> record, int column)
         {

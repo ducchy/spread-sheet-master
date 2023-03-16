@@ -1,39 +1,41 @@
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace SpreadSheetMaster.Samples
 {
     public class Sample : MonoBehaviour
     {
-        private const string OVERWRITE_SPREAD_SHEET_ID = "1JVNBk5FbMS75I-l9ua1e2lbZRry4Q7kvrf7Kfu267bk";
-
         [SerializeField] private SpreadSheetSetting _setting;
 
         private readonly CharacterMaster _characterMaster = new CharacterMaster();
         private SpreadSheetMasterImporter _importer;
 
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
-        private CancellationToken ct => _cts.Token;
-
 
         private void Start()
         {
             _importer = new SpreadSheetMasterImporter(_setting);
 
-            ImportMasterAllAsync();
+            var token = _cts.Token;
+            ImportMasterAllAsync(token);
         }
 
-        private async void ImportMasterAllAsync()
+        private async void ImportMasterAllAsync(CancellationToken token)
         {
             Debug.Log("[インポート開始]");
 
-            await _importer.ImportFromSpreadSheetAsync(_characterMaster, OnError, ct);
-            OnCompletedImport();
+            foreach (var spreadSheetData in _setting.spreadSheetDataArray) 
+                await ImportMasterAsync(spreadSheetData, token);
+            
+            Debug.Log("[インポート完了]");
+        }
 
-            _characterMaster.OverwriteSpreadSheetId(OVERWRITE_SPREAD_SHEET_ID);
-
-            await _importer.ImportFromSpreadSheetAsync(_characterMaster, OnError, ct);
+        private async Task ImportMasterAsync(SpreadSheetData spreadSheetData, CancellationToken token)
+        {
+            _characterMaster.OverwriteSpreadSheetId(spreadSheetData.id);
+            await _importer.ImportFromSpreadSheetAsync(_characterMaster, OnError, token);
             OnCompletedImport();
         }
 
@@ -47,7 +49,7 @@ namespace SpreadSheetMaster.Samples
             var sb = new StringBuilder();
             sb.Append("[インポート完了]").AppendLine();
 
-            var characters = _characterMaster.datas;
+            var characters = _characterMaster.dataList;
             sb.AppendFormat("CharacterMaster: count={0}", characters.Count).AppendLine();
             foreach (var character in characters)
                 sb.AppendFormat("- {0}", character.ToString()).AppendLine();
