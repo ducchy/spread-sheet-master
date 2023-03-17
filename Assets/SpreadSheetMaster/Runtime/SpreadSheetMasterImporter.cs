@@ -10,17 +10,18 @@ namespace SpreadSheetMaster
         private readonly CsvParser _parser;
         private readonly SheetDownloader _sheetDownloader = new SheetDownloader();
 
-        public SpreadSheetMasterImporter(SpreadSheetSetting setting)
+        public SpreadSheetMasterImporter(SpreadSheetSetting setting, CsvParser parser)
         {
             _setting = setting;
-            _parser = new CsvParser(_setting != null ? _setting.ignoreRowConditions : null);
+            _parser = parser;
         }
 
-        public async Task ImportFromSpreadSheetAsync(IImportableSpreadSheetMaster master, System.Action<string> onError,
-            CancellationToken ct)
+        public async Task ImportFromSpreadSheetAsync(IImportableSpreadSheetMaster master,
+            SheetDownloadKey sheetDownloadKey, System.Action<string> onError,
+            CancellationToken token)
         {
             var csv = string.Empty;
-            await _sheetDownloader.DownloadSheetAsync(master.spreadSheetId, master.sheetId, (str) => csv = str, onError, ct);
+            await _sheetDownloader.DownloadSheetAsync(master, sheetDownloadKey, (str) => csv = str, onError, token);
 
             ImportFromCsv(master, csv);
         }

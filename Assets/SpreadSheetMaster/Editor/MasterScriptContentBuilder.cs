@@ -57,6 +57,8 @@ namespace SpreadSheetMaster.Editor
                 .AppendLine();
             _sb.AppendTab(_tabCount).AppendFormat("public override string sheetId => \"{0}\";", configData.sheetId)
                 .AppendLine();
+            _sb.AppendTab(_tabCount).AppendFormat("public override string sheetName => \"{0}\";", configData.sheetName)
+                .AppendLine();
         }
         
         private void AppendEndNamespaceIfNeeded(string namespaceName)
