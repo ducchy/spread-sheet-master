@@ -18,11 +18,30 @@ namespace SpreadSheetMaster
             await DownloadSheetAsyncInternal(url, onSuccess, onError, token);
         }
 
-        public async Task DownloadSheetBySheetNameAsync(string spreadSheetId, string sheetName, Action<string> onSuccess,
+        public async Task DownloadSheetBySheetNameAsync(string spreadSheetId, string sheetName,
+            Action<string> onSuccess,
             Action<string> onError, CancellationToken token)
         {
             var url = _sheetUrlBuilder.BuildExportUrlBySheetName(spreadSheetId, sheetName);
             await DownloadSheetAsyncInternal(url, onSuccess, onError, token);
+        }
+
+
+        public async Task DownloadSheetAsync(IImportableSpreadSheetMaster master,
+            SheetDownloadKey sheetDownloadKey, Action<string> onSuccess, Action<string> onError,
+            CancellationToken token)
+        {
+            switch (sheetDownloadKey)
+            {
+                case SheetDownloadKey.SheetId:
+                    await DownloadSheetAsync(master.spreadSheetId, master.sheetId, onSuccess,
+                        onError, token);
+                    break;
+                case SheetDownloadKey.SheetName:
+                    await DownloadSheetBySheetNameAsync(master.spreadSheetId, master.sheetName,
+                        onSuccess, onError, token);
+                    break;
+            }
         }
 
         private async Task DownloadSheetAsyncInternal(string url, Action<string> onSuccess,

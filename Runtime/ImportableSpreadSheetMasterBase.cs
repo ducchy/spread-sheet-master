@@ -9,6 +9,7 @@ namespace SpreadSheetMaster
     {
         protected abstract string defaultSpreadSheetId { get; }
         public abstract string sheetId { get; }
+        public abstract string sheetName { get; }
 
         private string _overwriteSpreadSheetId = string.Empty;
 

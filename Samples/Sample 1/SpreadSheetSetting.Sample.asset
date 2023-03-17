@@ -31,9 +31,7 @@ MonoBehaviour:
   - type: 1
     conditionInt: 0
     conditionString: x
-  downloadSheetUrlFormat: 1
   namespaceName: SpreadSheetMaster.Samples
   constantNamingConvention: 1
   propertyNamingConvention: 1
   exportScriptDirectoryPath: Assets/
-  exportCsvDirectoryPath: Assets/

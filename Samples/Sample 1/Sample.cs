@@ -16,7 +16,8 @@ namespace SpreadSheetMaster.Samples
 
         private void Start()
         {
-            _importer = new SpreadSheetMasterImporter(_setting);
+            var parser = new CsvParser(_setting.ignoreRowConditions);
+            _importer = new SpreadSheetMasterImporter(_setting, parser);
 
             var token = _cts.Token;
             ImportMasterAllAsync(token);
@@ -35,7 +36,7 @@ namespace SpreadSheetMaster.Samples
         private async Task ImportMasterAsync(SpreadSheetData spreadSheetData, CancellationToken token)
         {
             _characterMaster.OverwriteSpreadSheetId(spreadSheetData.id);
-            await _importer.ImportFromSpreadSheetAsync(_characterMaster, OnError, token);
+            await _importer.ImportFromSpreadSheetAsync(_characterMaster, _setting.sheetDownloadKey, OnError, token);
             OnCompletedImport();
         }
 

@@ -27,6 +27,7 @@ namespace SpreadSheetMaster.Editor
         [SerializeField] private int _sheetIndex = 0;
         [SerializeField] private string _spreadSheetId;
         [SerializeField] private string _sheetId;
+        [SerializeField] private string _sheetName;
         [SerializeField] private string _masterName;
         [SerializeField] private MasterConfigData _editMasterConfig = null;
         [SerializeField] private string _namespaceName;
@@ -71,7 +72,16 @@ namespace SpreadSheetMaster.Editor
             get
             {
                 var sd = SheetData;
-                return sd != null ? sd.id : _spreadSheetId;
+                return sd != null ? sd.id : _sheetId;
+            }
+        }
+
+        private string SheetName
+        {
+            get
+            {
+                var sd = SheetData;
+                return sd != null ? sd.name : _sheetName;
             }
         }
 
@@ -81,6 +91,14 @@ namespace SpreadSheetMaster.Editor
             {
                 var sd = SheetData;
                 return sd != null ? sd.masterName : _masterName;
+            }
+        }
+
+        private SheetDownloadKey SheetDownloadKey
+        {
+            get
+            {
+                return _setting == null ? SheetDownloadKey.SheetId : _setting.sheetDownloadKey;
             }
         }
 
@@ -150,6 +168,7 @@ namespace SpreadSheetMaster.Editor
                 {
                     _spreadSheetId = EditorGUILayout.TextField("スプレッドシートID", SpreadSheetId);
                     _sheetId = EditorGUILayout.TextField("シートID", SheetId);
+                    _sheetName = EditorGUILayout.TextField("シート名", SheetName);
                     _masterName = EditorGUILayout.TextField("マスタ名", SheetMasterName);
                 }
 
@@ -209,23 +228,34 @@ namespace SpreadSheetMaster.Editor
 
         private async void DownloadSheetAsync(CancellationToken token)
         {
-            await DownloadSheetAsync(SpreadSheetId, SheetId, SheetMasterName, token);
+            await DownloadSheetAsync(SpreadSheetId, SheetId, SheetName, SheetMasterName, token);
         }
 
-        private async Task DownloadSheetAsync(string spreadSheetId, string sheetId, string sheetMasterName,
+        private async Task DownloadSheetAsync(string spreadSheetId, string sheetId, string sheetName,
+            string sheetMasterName,
             CancellationToken token)
         {
             var downloader = new SheetDownloader();
-            await downloader.DownloadSheetAsync(spreadSheetId, sheetId, (response) =>
-            {
-                _downloadText = response;
-                _editMasterConfig = ParseCsvToConfig(_downloadText, spreadSheetId, sheetId, sheetMasterName);
-                _downloadingFlag = false;
-            }, (error) =>
-            {
-                _downloadSheetError = error;
-                _downloadingFlag = false;
-            }, token);
+            void OnSuccess(string res) => OnSuccessDownload(res, spreadSheetId, sheetId, sheetName, sheetMasterName);
+            if (SheetDownloadKey == SheetDownloadKey.SheetName)
+                await downloader.DownloadSheetBySheetNameAsync(spreadSheetId, sheetName, OnSuccess, OnErrorDownload,
+                    token);
+            else
+                await downloader.DownloadSheetAsync(spreadSheetId, sheetId, OnSuccess, OnErrorDownload, token);
+        }
+
+        private void OnSuccessDownload(string response, string spreadSheetId, string sheetId, string sheetName,
+            string sheetMasterName)
+        {
+            _downloadText = response;
+            _editMasterConfig = ParseCsvToConfig(_downloadText, spreadSheetId, sheetId, sheetName, sheetMasterName);
+            _downloadingFlag = false;
+        }
+
+        private void OnErrorDownload(string error)
+        {
+            _downloadSheetError = error;
+            _downloadingFlag = false;
         }
 
         private async void DownloadAndExportSheetAllAsync(string spreadSheetId, CancellationToken token)
@@ -233,7 +263,7 @@ namespace SpreadSheetMaster.Editor
             var sheetDataList = _setting.sheetDataArray;
             foreach (var sheetData in sheetDataList)
             {
-                await DownloadSheetAsync(spreadSheetId, sheetData.id, sheetData.masterName, token);
+                await DownloadSheetAsync(spreadSheetId, sheetData.id, sheetData.name, sheetData.masterName, token);
 
                 ValidationGenerateScript();
                 if (!string.IsNullOrEmpty(_generateScriptWarning))
@@ -393,32 +423,38 @@ namespace SpreadSheetMaster.Editor
             if (string.IsNullOrEmpty(_spreadSheetId))
                 _downloadSheetWarning = "スプレッドシートID を入力してください";
 
-            if (string.IsNullOrEmpty(_sheetId))
+            if (SheetDownloadKey == SheetDownloadKey.SheetId && string.IsNullOrEmpty(_sheetId))
                 _downloadSheetWarning = "シートID を入力してください";
+
+            if (SheetDownloadKey == SheetDownloadKey.SheetName && string.IsNullOrEmpty(_sheetName))
+                _downloadSheetWarning = "シート名 を入力してください";
 
             if (string.IsNullOrEmpty(_masterName))
                 _downloadSheetWarning = "マスタ名 を入力してください";
         }
 
-        private MasterConfigData ParseCsvToConfig(string csv, string spreadSheetId, string sheetId, string masterName)
+        private MasterConfigData ParseCsvToConfig(string csv, string spreadSheetId, string sheetId, string sheetName,
+            string masterName)
         {
             var parser = new CsvParser(_setting != null ? _setting.ignoreRowConditions : null);
             var records = parser.Parse(csv, excludeHeader: false);
 
-            return CreateMasterConfigData(spreadSheetId, sheetId, masterName, records);
+            return CreateMasterConfigData(spreadSheetId, sheetId, sheetName, masterName, records);
         }
 
 
         #region create_config_data
 
-        private MasterConfigData CreateMasterConfigData(string spreadSheetId, string sheetId, string masterName,
+        private MasterConfigData CreateMasterConfigData(string spreadSheetId, string sheetId, string sheetName,
+            string masterName,
             IReadOnlyList<IReadOnlyList<string>> records)
         {
             var config = new MasterConfigData
             {
                 masterName = StringUtility.SnakeToUpperCamel(masterName + "Master"),
                 spreadSheetId = spreadSheetId,
-                sheetId = sheetId
+                sheetId = sheetId,
+                sheetName = sheetName,
             };
 
             if (records == null || records.Count == 0)
