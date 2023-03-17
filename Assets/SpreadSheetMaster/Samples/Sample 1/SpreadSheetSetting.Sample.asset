@@ -19,10 +19,10 @@ MonoBehaviour:
     id: 1qUJ3j7djNezcfvet3p7WcrJ2NS0cQlthybEIjGjK6As
   sheetDataArray:
   - name: "\u30AD\u30E3\u30E9\u30AF\u30BF\u30FC\u8A73\u7D30"
-    id: 0
+    id: 
     masterName: CharacterDetail
   - name: "\u30AD\u30E3\u30E9\u30AF\u30BF\u30FC"
-    id: 1353480984
+    id: 
     masterName: Character
   ignoreColumnConditions:
   - type: 0
@@ -34,4 +34,5 @@ MonoBehaviour:
   namespaceName: SpreadSheetMaster.Samples
   constantNamingConvention: 1
   propertyNamingConvention: 1
+  sheetDownloadKey: 1
   exportScriptDirectoryPath: Assets/

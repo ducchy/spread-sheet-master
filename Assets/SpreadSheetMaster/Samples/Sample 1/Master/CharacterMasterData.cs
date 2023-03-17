@@ -5,9 +5,9 @@ namespace SpreadSheetMaster.Samples
 {
 	public partial class CharacterMasterData : ImportableSpreadSheetMasterDataBase
 	{
-		private const int ColumnId = 0;
-		private const int ColumnName = 1;
-		private const int ColumnAge = 2;
+		private const int ColumnId = 1;
+		private const int ColumnName = 2;
+		private const int ColumnAge = 3;
 
 		public int Id { get; private set; }
 		public string Name { get; private set; }

@@ -30,15 +30,22 @@ namespace SpreadSheetMaster
                 var columns = new List<string>();
                 if (line != null)
                 {
+                    var empty = true;
                     var elements = line.Split(',');
                     for (var i = 0; i < elements.Length; i++)
                     {
-                        if (elements[i] == "\"\"")
+                        if (elements[i] == "\"\"") {
+                            columns.Add(string.Empty);
                             continue;
+                        }
 
                         elements[i] = elements[i].TrimStart('"').TrimEnd('"');
                         columns.Add(elements[i]);
+                        empty = false;
                     }
+
+                    if (empty)
+                        break;
                 }
 
                 if (IsIgnoreRow(row++, columns))
