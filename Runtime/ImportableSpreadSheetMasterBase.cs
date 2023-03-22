@@ -4,8 +4,8 @@ namespace SpreadSheetMaster
 {
     using System.Collections.Generic;
 
-    public abstract class ImportableSpreadSheetMasterBase<T> : IImportableSpreadSheetMaster
-        where T : ImportableSpreadSheetMasterDataBase, new()
+    public abstract class ImportableSpreadSheetMasterBase<TMasterData> : IImportableSpreadSheetMaster
+        where TMasterData : ImportableSpreadSheetMasterDataBase, new()
     {
         protected abstract string defaultSpreadSheetId { get; }
         public abstract string sheetId { get; }
@@ -17,23 +17,27 @@ namespace SpreadSheetMaster
             ? _overwriteSpreadSheetId
             : defaultSpreadSheetId;
 
-        public IReadOnlyList<T> dataList => _dataList;
-        protected List<T> _dataList = new List<T>();
-        
-        public int dataCount => _dataList?.Count ?? 0;
+        public IReadOnlyList<int> keys => _keys;
+        protected Dictionary<int, TMasterData> _dataDictionary = new Dictionary<int, TMasterData>();
+        protected List<int> _keys = new List<int>();
 
-        public T this[int i] => GetData(i);
+        public int dataCount => _keys?.Count ?? 0;
+
+        public TMasterData this[int i] => GetData(i);
 
         public void Import(IReadOnlyList<IReadOnlyList<string>> records)
         {
-            _dataList.Clear();
+            _dataDictionary.Clear();
+            _keys.Clear();
             PreImport();
             foreach (var record in records)
             {
-                var data = new T();
+                var data = new TMasterData();
                 data.SetData(record);
-                _dataList.Add(data);
+                _dataDictionary.Add(data.GetId(), data);
+                _keys.Add(data.GetId());
             }
+
             PostImport();
         }
 
@@ -45,57 +49,68 @@ namespace SpreadSheetMaster
         {
         }
 
-        public T GetData(int id)
+        public TMasterData GetData(int id)
         {
-            if (_dataList == null)
-                return null;
-
-            foreach (var data in _dataList)
-                if (data.GetId() == id)
-                    return data;
-
-            return null;
+            return TryGetValue(id, out var value) ? value : null;
         }
 
-        public T GetDataByIndex(int index)
+        public TMasterData GetDataByIndex(int index)
         {
-            return IndexOutOfRange(index) ? null : _dataList[index];
+            return IndexOutOfRange(index) ? null : _dataDictionary[_keys[index]];
         }
 
-        public bool TryGetValue(int id, out T value)
+        public bool TryGetValue(int id, out TMasterData value)
         {
-            value = GetData(id);
-            return value != null;
+            return _dataDictionary.TryGetValue(id, out value);
         }
 
-        public T Find(Func<T, bool> condition)
-        {
-            if (condition == null)
-                return null;
-            
-            foreach (var data in _dataList)
-                if (condition.Invoke(data))
-                    return data;
-
-            return null;
-        }
-
-        public List<T> FindAll(Func<T, bool> condition)
+        public TMasterData Find(Func<TMasterData, bool> condition)
         {
             if (condition == null)
                 return null;
 
-            var ret = new List<T>();
-            foreach (var data in _dataList)
-                if (condition.Invoke(data))
-                    ret.Add(data);
+            foreach (var key in _keys)
+                if (condition.Invoke(_dataDictionary[key]))
+                    return _dataDictionary[key];
+
+            return null;
+        }
+
+        public List<TMasterData> FindAll(Func<TMasterData, bool> condition)
+        {
+            if (condition == null)
+                return null;
+
+            var ret = new List<TMasterData>();
+            foreach (var key in _keys)
+                if (condition.Invoke(_dataDictionary[key]))
+                    ret.Add(_dataDictionary[key]);
 
             return ret;
         }
 
+        public void ForEach(Action<TMasterData> action)
+        {
+            if (action == null)
+                return;
+
+            foreach (var key in _keys)
+                action.Invoke(_dataDictionary[key]);
+        }
+
+        public void ForEach(Func<TMasterData, bool> breakFunc)
+        {
+            if (breakFunc == null)
+                return;
+
+            foreach (var key in _keys)
+                if (breakFunc.Invoke(_dataDictionary[key]))
+                    break;
+        }
+
         private bool IndexOutOfRange(int index)
         {
-            return _dataList == null || index < 0 || _dataList.Count <= index;
+            return _keys == null || index < 0 || _keys.Count <= index;
         }
 
         public void OverwriteSpreadSheetId(string id)

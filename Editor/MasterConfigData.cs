@@ -9,6 +9,7 @@ namespace SpreadSheetMaster.Editor
         public string sheetId;
         public string sheetName;
         public MasterColumnConfigData[] columns;
-        public MasterColumnConfigData _idMasterColumnConfigData;
+        public MasterColumnConfigData idMasterColumnConfigData;
+        public MasterColumnConfigData maxMasterColumnConfigData;
     }
 }

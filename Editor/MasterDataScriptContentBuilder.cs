@@ -8,10 +8,6 @@ namespace SpreadSheetMaster.Editor
         private readonly StringBuilder _sb = new StringBuilder();
         private int _tabCount;
 
-        public MasterDataScriptContentBuilder()
-        {
-        }
-
         public string Build(MasterConfigData configData, string namespaceName)
         {
             _sb.Clear();
@@ -34,7 +30,6 @@ namespace SpreadSheetMaster.Editor
 
         private void AppendBeginNamespaceIfNeeded(string namespaceName)
         {
-            ;
             if (string.IsNullOrEmpty(namespaceName))
                 return;
 
@@ -49,9 +44,9 @@ namespace SpreadSheetMaster.Editor
             _sb.AppendTab(_tabCount++).Append("{").AppendLine();
 
             var columnIndexConfigList = CreateColumnIndexConfigList(configData);
-            AppendClassConstants(columnIndexConfigList);
+            AppendClassConstants(columnIndexConfigList, configData.maxMasterColumnConfigData);
             AppendClassProperties(columnIndexConfigList);
-            AppendClassMethodGetId(configData._idMasterColumnConfigData);
+            AppendClassMethodGetId(configData.idMasterColumnConfigData);
             AppendClassMethodSetData(columnIndexConfigList);
             AppendClassMethodToString(configData, columnIndexConfigList);
 
@@ -72,12 +67,17 @@ namespace SpreadSheetMaster.Editor
             return ret;
         }
 
-        private void AppendClassConstants(List<System.Tuple<int, MasterColumnConfigData>> columnIndexConfigList)
+        private void AppendClassConstants(List<System.Tuple<int, MasterColumnConfigData>> columnIndexConfigList,
+            MasterColumnConfigData maxColumnConfigData)
         {
             foreach (var columnIndexConfig in columnIndexConfigList)
                 _sb.AppendTab(_tabCount)
                     .AppendFormat("private const int {0} = {1};", columnIndexConfig.Item2.constantName,
                         columnIndexConfig.Item1).AppendLine();
+
+            var maxCount = columnIndexConfigList.Count == 0 ? 0 : columnIndexConfigList[^1].Item1 + 1;
+            _sb.AppendTab(_tabCount)
+                .AppendFormat("private const int {0} = {1};", maxColumnConfigData.constantName, maxCount).AppendLine();
 
             _sb.AppendLine();
         }
