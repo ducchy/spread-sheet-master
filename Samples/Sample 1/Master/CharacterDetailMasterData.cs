@@ -10,6 +10,7 @@ namespace SpreadSheetMaster.Samples
 		private const int ColumnAge = 3;
 		private const int ColumnGender = 4;
 		private const int ColumnMailAddress = 6;
+		private const int ColumnMax = 7;
 
 		public int Id { get; private set; }
 		public string Name { get; private set; }
