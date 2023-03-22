@@ -4,7 +4,7 @@ namespace SpreadSheetMaster
 
     public interface IImportableSpreadSheetMasterData
     {
-        int GetId();
+        int GetKey();
         void SetData(IReadOnlyList<string> record);
     }
 }

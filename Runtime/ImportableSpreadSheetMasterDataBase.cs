@@ -6,7 +6,7 @@ namespace SpreadSheetMaster
 
     public abstract class ImportableSpreadSheetMasterDataBase : IImportableSpreadSheetMasterData
     {
-        public abstract int GetId();
+        public abstract int GetKey();
 
         public void SetData(IReadOnlyList<string> record)
         {
