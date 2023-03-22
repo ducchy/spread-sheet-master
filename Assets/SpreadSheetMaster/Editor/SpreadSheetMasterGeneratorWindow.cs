@@ -475,9 +475,11 @@ namespace SpreadSheetMaster.Editor
                 var columnName = columnNameList[i];
                 var column = CreateMasterConfigColumnData(columnName, columnData);
                 if (columnName == "id")
-                    config._idMasterColumnConfigData = column;
+                    config.idMasterColumnConfigData = column;
                 config.columns[i] = column;
             }
+
+            config.maxMasterColumnConfigData = CreateMasterConfigColumnData("max", columnCount.ToString());
 
             return config;
         }
@@ -543,7 +545,7 @@ namespace SpreadSheetMaster.Editor
         private void ValidationGenerateScript()
         {
             _generateScriptWarning = string.Empty;
-            if (_editMasterConfig._idMasterColumnConfigData == null)
+            if (_editMasterConfig.idMasterColumnConfigData == null)
             {
                 _generateScriptWarning = "\"id\"カラムを設定してください。";
                 return;

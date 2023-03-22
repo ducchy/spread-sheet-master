@@ -27,9 +27,9 @@ namespace SpreadSheetMaster.Samples
         {
             Debug.Log("[インポート開始]");
 
-            foreach (var spreadSheetData in _setting.spreadSheetDataArray) 
+            foreach (var spreadSheetData in _setting.spreadSheetDataArray)
                 await ImportMasterAsync(spreadSheetData, token);
-            
+
             Debug.Log("[インポート完了]");
         }
 
@@ -50,10 +50,11 @@ namespace SpreadSheetMaster.Samples
             var sb = new StringBuilder();
             sb.Append("[インポート完了]").AppendLine();
 
-            var characters = _characterMaster.dataList;
-            sb.AppendFormat("CharacterMaster: count={0}", characters.Count).AppendLine();
-            foreach (var character in characters)
+            sb.AppendFormat("CharacterMaster: count={0}", _characterMaster.dataCount).AppendLine();
+            _characterMaster.ForEach(character =>
+            {
                 sb.AppendFormat("- {0}", character.ToString()).AppendLine();
+            });
 
             Debug.Log(sb.ToString());
         }
