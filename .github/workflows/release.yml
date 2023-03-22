@@ -1,9 +1,11 @@
 name: Release Unity Package
 
 on:
-  push:
-    tags:
-      - v*
+  workflow_run:
+    workflows:
+      - "Update-UPM-Branch"
+    types:
+      - completed
 
 env:
   FILE_NAME: "SpreadSheetMaster"
