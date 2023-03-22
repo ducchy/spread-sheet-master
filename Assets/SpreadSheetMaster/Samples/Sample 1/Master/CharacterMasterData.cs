@@ -8,6 +8,7 @@ namespace SpreadSheetMaster.Samples
 		private const int ColumnId = 1;
 		private const int ColumnName = 2;
 		private const int ColumnAge = 3;
+		private const int ColumnMax = 4;
 
 		public int Id { get; private set; }
 		public string Name { get; private set; }
