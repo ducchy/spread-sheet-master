@@ -14,7 +14,7 @@ namespace SpreadSheetMaster.Samples
 		public string Name { get; private set; }
 		public int Age { get; private set; }
 
-		public override int GetId()
+		public override int GetKey()
 		{
 			return Id;
 		}

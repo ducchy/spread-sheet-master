@@ -18,7 +18,7 @@ namespace SpreadSheetMaster.Samples
 		public int Gender { get; private set; }
 		public string MailAddress { get; private set; }
 
-		public override int GetId()
+		public override int GetKey()
 		{
 			return Id;
 		}

@@ -23,7 +23,7 @@ namespace SpreadSheetMaster
 
         public int dataCount => _keys?.Count ?? 0;
 
-        public TMasterData this[int i] => GetData(i);
+        public TMasterData this[int key] => GetData(key);
 
         public void Import(IReadOnlyList<IReadOnlyList<string>> records)
         {
@@ -34,8 +34,8 @@ namespace SpreadSheetMaster
             {
                 var data = new TMasterData();
                 data.SetData(record);
-                _dataDictionary.Add(data.GetId(), data);
-                _keys.Add(data.GetId());
+                _dataDictionary.Add(data.GetKey(), data);
+                _keys.Add(data.GetKey());
             }
 
             PostImport();
@@ -49,9 +49,9 @@ namespace SpreadSheetMaster
         {
         }
 
-        public TMasterData GetData(int id)
+        public TMasterData GetData(int key)
         {
-            return TryGetValue(id, out var value) ? value : null;
+            return TryGetValue(key, out var value) ? value : null;
         }
 
         public TMasterData GetDataByIndex(int index)
@@ -59,9 +59,9 @@ namespace SpreadSheetMaster
             return IndexOutOfRange(index) ? null : _dataDictionary[_keys[index]];
         }
 
-        public bool TryGetValue(int id, out TMasterData value)
+        public bool TryGetValue(int key, out TMasterData value)
         {
-            return _dataDictionary.TryGetValue(id, out value);
+            return _dataDictionary.TryGetValue(key, out value);
         }
 
         public TMasterData Find(Func<TMasterData, bool> condition)
