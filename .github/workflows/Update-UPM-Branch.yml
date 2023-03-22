@@ -1,9 +1,11 @@
 name: Update-UPM-Branch
 
 on:
-  push:
-    tags:
-      - v*
+  workflow_run:
+    workflows:
+      - "Release Unity Package"
+    types:
+      - completed
 
 jobs:
   update:
