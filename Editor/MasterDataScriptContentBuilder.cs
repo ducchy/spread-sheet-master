@@ -94,7 +94,7 @@ namespace SpreadSheetMaster.Editor
 
         private void AppendClassMethodGetId(MasterColumnConfigData idMasterColumnConfigData)
         {
-            _sb.AppendTab(_tabCount).Append("public override int GetId()").AppendLine();
+            _sb.AppendTab(_tabCount).Append("public override int GetKey()").AppendLine();
             _sb.AppendTab(_tabCount++).Append("{").AppendLine();
             _sb.AppendTab(_tabCount).AppendFormat("return {0};", idMasterColumnConfigData.propertyName).AppendLine();
             _sb.AppendTab(--_tabCount).Append("}").AppendLine();
