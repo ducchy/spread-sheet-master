@@ -15,7 +15,7 @@ namespace SpreadSheetMaster.Samples
 		public int Id { get; private set; }
 		public string Name { get; private set; }
 		public int Age { get; private set; }
-		public int Gender { get; private set; }
+		public GenderType Gender { get; private set; }
 		public string MailAddress { get; private set; }
 
 		public override int GetKey()
@@ -28,7 +28,7 @@ namespace SpreadSheetMaster.Samples
 			Id = GetInt(record, ColumnId);
 			Name = GetString(record, ColumnName);
 			Age = GetInt(record, ColumnAge);
-			Gender = GetInt(record, ColumnGender);
+			Gender = GetEnum<GenderType>(record, ColumnGender);
 			MailAddress = GetString(record, ColumnMailAddress);
 		}
 		public override string ToString()

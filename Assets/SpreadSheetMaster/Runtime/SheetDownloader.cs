@@ -1,61 +1,70 @@
 using System;
+using System.Threading;
+using System.Threading.Tasks;
+using UnityEngine.Networking;
 
 namespace SpreadSheetMaster
 {
-    using System.Threading;
-    using System.Threading.Tasks;
-    using UnityEngine;
-    using UnityEngine.Networking;
-
     public class SheetDownloader
     {
-        private readonly SheetUrlBuilder _sheetUrlBuilder = new SheetUrlBuilder();
+        private readonly SheetUrlBuilder _sheetUrlBuilder = new();
 
-        public async Task DownloadSheetAsync(string spreadSheetId, string sheetId, Action<string> onSuccess,
-            Action<string> onError, CancellationToken token)
+        public AsyncOperationHandle<string> DownloadSheetAsync(string spreadSheetId, string sheetId,
+            CancellationToken token)
         {
             var url = _sheetUrlBuilder.BuildExportUrl(spreadSheetId, sheetId);
-            await DownloadSheetAsyncInternal(url, onSuccess, onError, token);
+            var op = new AsyncOperator<string>();
+            DownloadSheetAsyncInternal(op, url, token).ContinueWith(_ => { }, token);
+            return op;
         }
 
-        public async Task DownloadSheetBySheetNameAsync(string spreadSheetId, string sheetName,
-            Action<string> onSuccess,
-            Action<string> onError, CancellationToken token)
+        public AsyncOperationHandle<string> DownloadSheetBySheetNameAsync(string spreadSheetId, string sheetName,
+            CancellationToken token)
         {
             var url = _sheetUrlBuilder.BuildExportUrlBySheetName(spreadSheetId, sheetName);
-            await DownloadSheetAsyncInternal(url, onSuccess, onError, token);
+            var op = new AsyncOperator<string>();
+            DownloadSheetAsyncInternal(op, url, token).ContinueWith(_ => { }, token);
+            return op;
         }
 
 
-        public async Task DownloadSheetAsync(IImportableSpreadSheetMaster master,
-            SheetDownloadKey sheetDownloadKey, Action<string> onSuccess, Action<string> onError,
-            CancellationToken token)
+        public AsyncOperationHandle<string> DownloadSheetAsync(IImportableSpreadSheetMaster master,
+            SheetDownloadKey sheetDownloadKey, CancellationToken token)
         {
             switch (sheetDownloadKey)
             {
                 case SheetDownloadKey.SheetId:
-                    await DownloadSheetAsync(master.spreadSheetId, master.sheetId, onSuccess,
-                        onError, token);
-                    break;
+                    return DownloadSheetAsync(master.spreadSheetId, master.sheetId, token);
                 case SheetDownloadKey.SheetName:
-                    await DownloadSheetBySheetNameAsync(master.spreadSheetId, master.sheetName,
-                        onSuccess, onError, token);
-                    break;
+                    return DownloadSheetBySheetNameAsync(master.spreadSheetId, master.sheetName, token);
+                default:
+                    var op = new AsyncOperator<string>();
+                    op.Canceled(new InvalidOperationException($"Invalid SheetDownloadKey({sheetDownloadKey})"));
+                    return op;
             }
         }
 
-        private async Task DownloadSheetAsyncInternal(string url, Action<string> onSuccess,
-            Action<string> onError, CancellationToken token)
+        private async Task DownloadSheetAsyncInternal(AsyncOperator<string> op, string url, CancellationToken token)
         {
-            var request = UnityWebRequest.Get(url);
-            _ = request.SendWebRequest();
+            UnityWebRequest request;
+            try
+            {
+                request = UnityWebRequest.Get(url);
+                _ = request.SendWebRequest();
+            }
+            catch (Exception e)
+            {
+                op.Canceled(e);
+                return;
+            }
 
             while (!request.isDone)
             {
                 if (token.IsCancellationRequested)
                 {
-                    Debug.Log("Task {0} cancelled");
                     token.ThrowIfCancellationRequested();
+                    op.Canceled();
+                    return;
                 }
 
                 await Task.Yield();
@@ -65,12 +74,12 @@ namespace SpreadSheetMaster
             {
                 if (request.downloadHandler.text.IndexOf("https://accounts.google.com/v3/signin/",
                         StringComparison.Ordinal) != -1)
-                    onError?.Invoke("サインインが要求されました。\nスプレッドシートの公開設定を変更してください。");
+                    op.Canceled(new InvalidOperationException("Required to sign in"));
                 else
-                    onSuccess?.Invoke(request.downloadHandler.text);
+                    op.Completed(request.downloadHandler.text);
             }
             else
-                onError?.Invoke(request.error);
+                op.Canceled(new Exception(request.error));
         }
     }
 }

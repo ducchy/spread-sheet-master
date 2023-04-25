@@ -2,16 +2,21 @@ namespace SpreadSheetMaster
 {
     using System;
     using System.Collections.Generic;
-    using UnityEngine;
 
     public abstract class ImportableSpreadSheetMasterDataBase : IImportableSpreadSheetMasterData
     {
         public abstract int GetKey();
 
-        public void SetData(IReadOnlyList<string> record)
+        private ImportMasterInfo _importInfo;
+
+        public void SetData(IReadOnlyList<string> record, ImportMasterInfo importInfo)
         {
+            _importInfo = importInfo;
+
             SetDataInternal(record);
             SetCustomData(record);
+
+            _importInfo = null;
         }
 
         protected abstract void SetDataInternal(IReadOnlyList<string> record);
@@ -20,52 +25,88 @@ namespace SpreadSheetMaster
         {
         }
 
-        protected string GetString(IReadOnlyList<string> record, int column)
+        private bool IsIndexOutOfRange(IReadOnlyList<string> record, int index)
         {
-            if (record != null && 0 <= column && column < record.Count)
-                return record[column];
+            return record == null || index < 0 || record.Count <= index;
+        }
 
-            Debug.LogErrorFormat("Index out of range. index={0}", column);
+        protected string GetString(IReadOnlyList<string> record, int index)
+        {
+            if (!IsIndexOutOfRange(record, index))
+                return record[index];
+
+            _importInfo.OutOfRangeIndex(index);
             return string.Empty;
         }
 
-        protected int GetInt(IReadOnlyList<string> record, int column)
+        protected int GetInt(IReadOnlyList<string> record, int index)
         {
-            var str = GetString(record, column);
-            if (int.TryParse(str, out int result))
+            if (IsIndexOutOfRange(record, index))
+            {
+                _importInfo.OutOfRangeIndex(index);
+                return default;
+            }
+
+            var str = record[index];
+            if (int.TryParse(str, out var result))
                 return result;
 
-            Debug.LogErrorFormat("Could not parse \"{0}\" to int.", str);
-            return default(int);
+            if (float.TryParse(str, out var floatResult))
+            {
+                var intResult = (int)floatResult;
+                _importInfo.CastOnParse($"floatへのキャストが発生 (index={index}, {str} -> {intResult}");
+                return intResult;
+            }
+
+            _importInfo.FailedParse("int", index, str);
+            return default;
         }
 
-        protected float GetFloat(IReadOnlyList<string> record, int column)
+        protected float GetFloat(IReadOnlyList<string> record, int index)
         {
-            var str = GetString(record, column);
-            if (float.TryParse(str, out float result))
+            if (IsIndexOutOfRange(record, index))
+            {
+                _importInfo.OutOfRangeIndex(index);
+                return default;
+            }
+
+            var str = record[index];
+            if (float.TryParse(str, out var result))
                 return result;
 
-            Debug.LogErrorFormat("Could not parse \"{0}\" to float.", str);
+            _importInfo.FailedParse("float", index, str);
             return default(float);
         }
 
-        protected bool GetBool(IReadOnlyList<string> record, int column)
+        protected bool GetBool(IReadOnlyList<string> record, int index)
         {
-            var str = GetString(record, column);
-            if (bool.TryParse(str, out bool result))
+            if (IsIndexOutOfRange(record, index))
+            {
+                _importInfo.OutOfRangeIndex(index);
+                return default;
+            }
+
+            var str = record[index];
+            if (bool.TryParse(str, out var result))
                 return result;
 
-            Debug.LogErrorFormat("Could not parse \"{0}\" to bool.", str);
+            _importInfo.FailedParse("bool", index, str);
             return default(bool);
         }
 
-        protected T GetEnum<T>(IReadOnlyList<string> record, int column, T @default = default(T)) where T : struct
+        protected T GetEnum<T>(IReadOnlyList<string> record, int index, T @default = default(T)) where T : struct
         {
-            var str = GetString(record, column);
+            if (IsIndexOutOfRange(record, index))
+            {
+                _importInfo.OutOfRangeIndex(index);
+                return default;
+            }
+
+            var str = record[index];
             if (Enum.TryParse(str, out T result))
                 return result;
 
-            Debug.LogErrorFormat("Could not parse {0} to {1}.", str, typeof(T).Name);
+            _importInfo.FailedParse($"enum({typeof(T).Name})", index, str);
             return @default;
         }
     }

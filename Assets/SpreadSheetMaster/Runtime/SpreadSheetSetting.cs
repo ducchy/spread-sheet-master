@@ -39,21 +39,56 @@ namespace SpreadSheetMaster
         SheetName,
     }
 
+    public enum LogLevel
+    {
+        Log,
+        Warning,
+        Error,
+        None,
+    }
+
+    public enum ImportSource
+    {
+        SpreadSheet,
+        ResourceCsv,
+    }
+
     [CreateAssetMenu(fileName = "SpreadSheetSetting", menuName = "SpreadSheetMaster/ImportSetting")]
     public class SpreadSheetSetting : ScriptableObject
     {
-        [Header("シート情報")] public SpreadSheetData[] spreadSheetDataArray;
+        [Header("シート設定")] public SpreadSheetData[] spreadSheetDataArray;
         public SheetData[] sheetDataArray;
         public IgnoreColumnCondition[] ignoreColumnConditions;
         public IgnoreRowCondition[] ignoreRowConditions;
         public NamingConvention columnNameNamingConvention { get; private set; } = NamingConvention.SnakeCase;
 
-        [Header("コード情報")] public string namespaceName = string.Empty;
+        [Header("コード設定")] public string[] findNamespaceNameList;
+        public string[] findAssemblyNameList = { "Assembly-CSharp.dll" };
         public NamingConvention constantNamingConvention = NamingConvention.UpperCamelCase;
         public NamingConvention propertyNamingConvention = NamingConvention.UpperCamelCase;
         public SheetDownloadKey sheetDownloadKey;
 
-        [Header("出力情報")] public string exportScriptDirectoryPath = "Assets/";
-        // public string exportCsvDirectoryPath = "Assets/";
+        [Header("出力設定")] public string exportNamespaceName = string.Empty;
+        public string exportScriptDirectoryPath = "Assets/";
+        public string exportCsvDirectoryPath = "Assets/";
+
+        [Header("インポート設定")] public ImportSource importSource = ImportSource.SpreadSheet;
+        public string importResourceDirectoryPath = "Assets/Resources/Csv";
+
+        [Header("デバッグ設定")] public LogLevel logLevel = LogLevel.Log;
+
+        public SpreadSheetData GetSpreadSheetData(int index)
+        {
+            return (0 <= index && index < spreadSheetDataArray.Length)
+                ? spreadSheetDataArray[index]
+                : null;
+        }
+
+        public SheetData GetSheetData(int index)
+        {
+            return (0 <= index && index < sheetDataArray.Length)
+                ? sheetDataArray[index]
+                : null;
+        }
     }
 }

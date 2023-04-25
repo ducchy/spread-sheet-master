@@ -108,9 +108,11 @@ namespace SpreadSheetMaster.Editor
             _sb.AppendTab(_tabCount++).Append("{").AppendLine();
 
             foreach (var columnIndexConfig in columnIndexConfigList)
-                _sb.AppendTab(_tabCount).AppendFormat("{0} = Get{1}(record, {2});",
+                _sb.AppendTab(_tabCount).AppendFormat("{0} = Get{1}{2}(record, {3});",
                     columnIndexConfig.Item2.propertyName,
-                    columnIndexConfig.Item2.type.ToString(), columnIndexConfig.Item2.constantName).AppendLine();
+                    columnIndexConfig.Item2.type.ToString(), 
+                    (columnIndexConfig.Item2.enumType != null ? $"<{columnIndexConfig.Item2.enumTypeName}>" : string.Empty),
+                    columnIndexConfig.Item2.constantName).AppendLine();
 
             _sb.AppendTab(--_tabCount).Append("}").AppendLine();
         }

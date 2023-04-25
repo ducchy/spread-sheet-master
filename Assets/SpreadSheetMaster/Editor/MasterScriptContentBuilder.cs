@@ -4,13 +4,9 @@ namespace SpreadSheetMaster.Editor
 {
     public class MasterScriptContentBuilder
     {
-        private readonly StringBuilder _sb = new StringBuilder();
+        private readonly StringBuilder _sb = new();
         private int _tabCount;
         
-        public MasterScriptContentBuilder()
-        {
-        }
-
         public string Build(MasterConfigData configData, string namespaceName)
         {
             _sb.Clear();
@@ -31,7 +27,7 @@ namespace SpreadSheetMaster.Editor
         }
 
         private void AppendBeginNamespaceIfNeeded(string namespaceName)
-        {;
+        {
             if (string.IsNullOrEmpty(namespaceName))
                 return;
             
@@ -62,7 +58,7 @@ namespace SpreadSheetMaster.Editor
         }
         
         private void AppendEndNamespaceIfNeeded(string namespaceName)
-        {;
+        {
             if (string.IsNullOrEmpty(namespaceName))
                 return;
             
