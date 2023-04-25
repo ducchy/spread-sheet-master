@@ -1,23 +1,29 @@
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 
 namespace SpreadSheetMaster.Samples
 {
+    public enum GenderType
+    {
+        Man,
+        Woman,
+    }
+
     public class Sample : MonoBehaviour
     {
         [SerializeField] private SpreadSheetSetting _setting;
 
-        private readonly CharacterMaster _characterMaster = new CharacterMaster();
+        private readonly CharacterMaster _characterMaster = new();
+        private readonly CharacterDetailMaster _characterDetailMaster = new();
         private SpreadSheetMasterImporter _importer;
 
-        private readonly CancellationTokenSource _cts = new CancellationTokenSource();
+        private readonly CancellationTokenSource _cts = new();
 
         private void Start()
         {
             var parser = new CsvParser(_setting.ignoreRowConditions);
-            _importer = new SpreadSheetMasterImporter(_setting, parser);
+            _importer = new SpreadSheetMasterImporter(parser, _setting.logLevel);
 
             var token = _cts.Token;
             ImportMasterAllAsync(token);
@@ -36,27 +42,21 @@ namespace SpreadSheetMaster.Samples
         private async Task ImportMasterAsync(SpreadSheetData spreadSheetData, CancellationToken token)
         {
             _characterMaster.OverwriteSpreadSheetId(spreadSheetData.id);
-            await _importer.ImportFromSpreadSheetAsync(_characterMaster, _setting.sheetDownloadKey, OnError, token);
-            OnCompletedImport();
-        }
+            _characterDetailMaster.OverwriteSpreadSheetId(spreadSheetData.id);
 
-        private void OnError(string error)
-        {
-            Debug.LogError(error);
-        }
+            var characterMasterImportHandle =
+                _importer.ImportAsync(_setting, _characterMaster, token);
+            var characterDetailMasterImportHandle =
+                _importer.ImportAsync(_setting, _characterDetailMaster, token);
 
-        private void OnCompletedImport()
-        {
-            var sb = new StringBuilder();
-            sb.Append("[インポート完了]").AppendLine();
+            while (!characterMasterImportHandle.IsDone || !characterDetailMasterImportHandle.IsDone)
+                await Task.Yield();
 
-            sb.AppendFormat("CharacterMaster: count={0}", _characterMaster.dataCount).AppendLine();
-            _characterMaster.ForEach(character =>
-            {
-                sb.AppendFormat("- {0}", character.ToString()).AppendLine();
-            });
+            if (characterMasterImportHandle.Exception != null)
+                Debug.LogError(characterMasterImportHandle.Exception.Message);
 
-            Debug.Log(sb.ToString());
+            if (characterDetailMasterImportHandle.Exception != null)
+                Debug.LogError(characterDetailMasterImportHandle.Exception.Message);
         }
     }
 }

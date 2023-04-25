@@ -31,8 +31,17 @@ MonoBehaviour:
   - type: 1
     conditionInt: 0
     conditionString: x
-  namespaceName: SpreadSheetMaster.Samples
+  findNamespaceNameList:
+  - SpreadSheetMaster.Samples
+  findAssemblyNameList:
+  - Assembly-CSharp.dll
+  - spread-sheet-master.Samples
   constantNamingConvention: 1
   propertyNamingConvention: 1
   sheetDownloadKey: 1
+  exportNamespaceName: SpreadSheetMaster.Samples
   exportScriptDirectoryPath: Assets/
+  exportCsvDirectoryPath: Assets/
+  importSource: 0
+  importResourceDirectoryPath: Csv
+  logLevel: 0
