@@ -24,6 +24,8 @@ namespace SpreadSheetMaster
 
         public int dataCount => _keys.Count;
 
+        public TMasterData this[int key] => GetData(key);
+
         public void Import(IReadOnlyList<IReadOnlyList<string>> records, ImportMasterInfo importInfo)
         {
             _dataDictionary.Clear();
@@ -35,7 +37,7 @@ namespace SpreadSheetMaster
                 data.SetData(record, importInfo);
                 _dataDictionary.Add(data.GetKey(), data);
                 _keys.Add(data.GetKey());
-                
+
                 importInfo.Imported(data.ToString());
             }
 
