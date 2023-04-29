@@ -26,7 +26,7 @@ namespace SpreadSheetMaster
 
         public TMasterData this[int key] => GetData(key);
 
-        public void Import(IReadOnlyList<IReadOnlyList<string>> records, ImportMasterInfo importInfo)
+        public void Import(IReadOnlyList<IReadOnlyList<string>> records, ImportMasterLogBuilder importLogBuilder)
         {
             _dataDictionary.Clear();
             _keys.Clear();
@@ -34,11 +34,19 @@ namespace SpreadSheetMaster
             foreach (var record in records)
             {
                 var data = new TMasterData();
-                data.SetData(record, importInfo);
+                data.SetData(record, importLogBuilder);
+
+#if SSM_LOG
+                if (_dataDictionary.ContainsKey(data.GetKey()))
+                    importLogBuilder.DuplicateKey(data.GetKey());
+                else
+                    _dataDictionary.Add(data.GetKey(), data);
+#else
                 _dataDictionary.Add(data.GetKey(), data);
+#endif
                 _keys.Add(data.GetKey());
 
-                importInfo.Imported(data.ToString());
+                importLogBuilder.ImportedData(data.ToString());
             }
 
             PostImport();

@@ -5,6 +5,6 @@ namespace SpreadSheetMaster
     public interface IImportableSpreadSheetMasterData
     {
         int GetKey();
-        void SetData(IReadOnlyList<string> record, ImportMasterInfo importInfo);
+        void SetData(IReadOnlyList<string> record, ImportMasterLogBuilder importLogBuilder);
     }
 }

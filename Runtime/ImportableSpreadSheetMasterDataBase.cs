@@ -7,16 +7,16 @@ namespace SpreadSheetMaster
     {
         public abstract int GetKey();
 
-        private ImportMasterInfo _importInfo;
+        private ImportMasterLogBuilder _importLogBuilder;
 
-        public void SetData(IReadOnlyList<string> record, ImportMasterInfo importInfo)
+        public void SetData(IReadOnlyList<string> record, ImportMasterLogBuilder importLogBuilder)
         {
-            _importInfo = importInfo;
+            _importLogBuilder = importLogBuilder;
 
             SetDataInternal(record);
             SetCustomData(record);
 
-            _importInfo = null;
+            _importLogBuilder = null;
         }
 
         protected abstract void SetDataInternal(IReadOnlyList<string> record);
@@ -35,7 +35,7 @@ namespace SpreadSheetMaster
             if (!IsIndexOutOfRange(record, index))
                 return record[index];
 
-            _importInfo.OutOfRangeIndex(index);
+            _importLogBuilder.OutOfRangeIndex(index);
             return string.Empty;
         }
 
@@ -43,7 +43,7 @@ namespace SpreadSheetMaster
         {
             if (IsIndexOutOfRange(record, index))
             {
-                _importInfo.OutOfRangeIndex(index);
+                _importLogBuilder.OutOfRangeIndex(index);
                 return default;
             }
 
@@ -54,11 +54,11 @@ namespace SpreadSheetMaster
             if (float.TryParse(str, out var floatResult))
             {
                 var intResult = (int)floatResult;
-                _importInfo.CastOnParse($"floatへのキャストが発生 (index={index}, {str} -> {intResult}");
+                _importLogBuilder.CastOnParse($"floatからintへのキャストが発生 (index={index}, {str} -> {intResult}");
                 return intResult;
             }
 
-            _importInfo.FailedParse("int", index, str);
+            _importLogBuilder.FailedParse("int", index, str);
             return default;
         }
 
@@ -66,7 +66,7 @@ namespace SpreadSheetMaster
         {
             if (IsIndexOutOfRange(record, index))
             {
-                _importInfo.OutOfRangeIndex(index);
+                _importLogBuilder.OutOfRangeIndex(index);
                 return default;
             }
 
@@ -74,7 +74,7 @@ namespace SpreadSheetMaster
             if (float.TryParse(str, out var result))
                 return result;
 
-            _importInfo.FailedParse("float", index, str);
+            _importLogBuilder.FailedParse("float", index, str);
             return default(float);
         }
 
@@ -82,7 +82,7 @@ namespace SpreadSheetMaster
         {
             if (IsIndexOutOfRange(record, index))
             {
-                _importInfo.OutOfRangeIndex(index);
+                _importLogBuilder.OutOfRangeIndex(index);
                 return default;
             }
 
@@ -90,7 +90,7 @@ namespace SpreadSheetMaster
             if (bool.TryParse(str, out var result))
                 return result;
 
-            _importInfo.FailedParse("bool", index, str);
+            _importLogBuilder.FailedParse("bool", index, str);
             return default(bool);
         }
 
@@ -98,7 +98,7 @@ namespace SpreadSheetMaster
         {
             if (IsIndexOutOfRange(record, index))
             {
-                _importInfo.OutOfRangeIndex(index);
+                _importLogBuilder.OutOfRangeIndex(index);
                 return default;
             }
 
@@ -106,7 +106,7 @@ namespace SpreadSheetMaster
             if (Enum.TryParse(str, out T result))
                 return result;
 
-            _importInfo.FailedParse($"enum({typeof(T).Name})", index, str);
+            _importLogBuilder.FailedParse($"enum({typeof(T).Name})", index, str);
             return @default;
         }
     }
