@@ -9,7 +9,7 @@ namespace SpreadSheetMaster
 		string sheetId { get; }
 		string sheetName { get; }
 
-		void Import(IReadOnlyList<IReadOnlyList<string>> records, ImportMasterInfo importInfo);
+		void Import(IReadOnlyList<IReadOnlyList<string>> records, ImportMasterLogBuilder importLogBuilder);
 		
 		void OverwriteSpreadSheetId(string spreadSheetId);
 		void ClearOverwriteSpreadSheetId();

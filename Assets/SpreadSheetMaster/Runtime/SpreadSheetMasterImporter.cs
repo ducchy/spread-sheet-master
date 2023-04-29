@@ -18,12 +18,12 @@ namespace SpreadSheetMaster
             _logLevel = logLevel;
         }
 
-        public AsyncOperationHandle<ImportMasterInfo> ImportAsync(SpreadSheetSetting setting,
+        public AsyncOperationHandle<ImportMasterLogBuilder> ImportAsync(SpreadSheetSetting setting,
             IImportableSpreadSheetMaster master, CancellationToken token)
         {
             if (setting == null || master == null)
             {
-                var op = new AsyncOperator<ImportMasterInfo>();
+                var op = new AsyncOperator<ImportMasterLogBuilder>();
                 op.Canceled(new InvalidOperationException());
                 return op;
             }
@@ -35,16 +35,17 @@ namespace SpreadSheetMaster
                 case ImportSource.ResourceCsv:
                     return ImportFromResource(master, $"{setting.importResourceDirectoryPath}/{master.className}");
                 default:
-                    var op = new AsyncOperator<ImportMasterInfo>();
+                    var op = new AsyncOperator<ImportMasterLogBuilder>();
                     op.Canceled(new InvalidOperationException($"Invalid ImportSource({setting.importSource})"));
                     return op;
             }
         }
 
-        public AsyncOperationHandle<ImportMasterInfo> ImportFromSpreadSheetAsync(IImportableSpreadSheetMaster master,
+        public AsyncOperationHandle<ImportMasterLogBuilder> ImportFromSpreadSheetAsync(
+            IImportableSpreadSheetMaster master,
             SheetDownloadKey sheetDownloadKey, CancellationToken token)
         {
-            var op = new AsyncOperator<ImportMasterInfo>();
+            var op = new AsyncOperator<ImportMasterLogBuilder>();
 
             if (master == null)
             {
@@ -59,7 +60,7 @@ namespace SpreadSheetMaster
             return op;
         }
 
-        private async Task ImportFromSpreadSheetInternalAsync(AsyncOperator<ImportMasterInfo> op,
+        private async Task ImportFromSpreadSheetInternalAsync(AsyncOperator<ImportMasterLogBuilder> op,
             AsyncOperationHandle<string> sheetDownloadHandle, IImportableSpreadSheetMaster master,
             string key, CancellationToken token)
         {
@@ -85,10 +86,10 @@ namespace SpreadSheetMaster
             ImportFromCsv(op, master, csv, key);
         }
 
-        public AsyncOperationHandle<ImportMasterInfo> ImportFromResource(IImportableSpreadSheetMaster master,
+        public AsyncOperationHandle<ImportMasterLogBuilder> ImportFromResource(IImportableSpreadSheetMaster master,
             string resourcePath)
         {
-            var op = new AsyncOperator<ImportMasterInfo>();
+            var op = new AsyncOperator<ImportMasterLogBuilder>();
 
             var csvFile = Resources.Load<TextAsset>(resourcePath);
             if (csvFile == null)
@@ -100,7 +101,7 @@ namespace SpreadSheetMaster
             return ImportFromCsv(op, master, csvFile.text);
         }
 
-        private AsyncOperationHandle<ImportMasterInfo> ImportFromCsv(AsyncOperator<ImportMasterInfo> op,
+        private AsyncOperationHandle<ImportMasterLogBuilder> ImportFromCsv(AsyncOperator<ImportMasterLogBuilder> op,
             IImportableSpreadSheetMaster master, string csv, string key = "")
         {
             if (string.IsNullOrEmpty(csv))
@@ -110,9 +111,19 @@ namespace SpreadSheetMaster
             }
 
             var records = _parser.Parse(csv, excludeHeader: true);
-            var importInfo = new ImportMasterInfo();
+            var importInfo = new ImportMasterLogBuilder();
             importInfo.Initialize(master.className, key, records.Count, _logLevel);
-            master.Import(records, importInfo);
+            try
+            {
+                master.Import(records, importInfo);
+            }
+            catch (Exception e)
+            {
+                importInfo.Exception(e);
+                op.Canceled(e);
+                return op;
+            }
+
             importInfo.ExportLog();
             op.Completed(importInfo);
 
