@@ -21,13 +21,15 @@ namespace SpreadSheetMaster
             _maxLogLevel = LogLevel.Log;
             _currentDataMaxLogLevel = LogLevel.Log;
 
+            if (_logLevel == LogLevel.None)
+                return;
+
             _sb.Clear();
-
-            AppendLog($"[{className}(key={key})]");
-            AppendLog($"count={count}");
-            AppendLog(string.Empty);
+            _sb.AppendLine($"[{className}(key={key})]");
+            _sb.AppendLine($"count={count}");
+            _sb.AppendLine();
         }
-
+        
         [Conditional("SSM_LOG")]
         public void ImportedData(string data)
         {
