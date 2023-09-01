@@ -5,6 +5,7 @@ namespace SpreadSheetMaster.Editor
 {
     public static class StringUtility
     {
+        /// <summary> 無効なファイル名文字列か </summary>
         private static readonly System.Text.RegularExpressions.Regex INVALID_FILENAME_REGEX =
             new System.Text.RegularExpressions.Regex(
                 "[\\x00-\\x1f<>:\"/\\\\|?*]" +
@@ -12,6 +13,7 @@ namespace SpreadSheetMaster.Editor
                 "|[\\. ]$",
                 System.Text.RegularExpressions.RegexOptions.IgnoreCase);
         
+        /// <summary> 変換 </summary>
         public static string Convert(string str, NamingConvention from, NamingConvention to)
         {
             switch (from)

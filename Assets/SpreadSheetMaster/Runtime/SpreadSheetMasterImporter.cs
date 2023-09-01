@@ -1,68 +1,66 @@
 using System;
 using System.Threading.Tasks;
+using System.Threading;
+using UnityEngine;
 
 namespace SpreadSheetMaster
 {
-    using System.Threading;
-    using UnityEngine;
-
+    /// <summary> スプレッドシートインポート </summary>
     public class SpreadSheetMasterImporter
     {
+        /// <summary> パーサー </summary>
         private readonly CsvParser _parser;
+
+        /// <summary> ログレベル </summary>
         private readonly LogLevel _logLevel;
+
+        /// <summary> シートダウンローダー </summary>
         private readonly SheetDownloader _sheetDownloader = new();
 
+        /// <summary> コンストラクタ </summary>
         public SpreadSheetMasterImporter(CsvParser parser, LogLevel logLevel)
         {
             _parser = parser;
             _logLevel = logLevel;
         }
 
-        public AsyncOperationHandle<ImportMasterLogBuilder> ImportAsync(SpreadSheetSetting setting,
-            IImportableSpreadSheetMaster master, CancellationToken token)
-        {
-            if (setting == null || master == null)
-            {
-                var op = new AsyncOperator<ImportMasterLogBuilder>();
-                op.Canceled(new InvalidOperationException());
-                return op;
-            }
-
-            switch (setting.importSource)
-            {
-                case ImportSource.SpreadSheet:
-                    return ImportFromSpreadSheetAsync(master, setting.sheetDownloadKey, token);
-                case ImportSource.ResourceCsv:
-                    return ImportFromResource(master, $"{setting.importResourceDirectoryPath}/{master.className}");
-                default:
-                    var op = new AsyncOperator<ImportMasterLogBuilder>();
-                    op.Canceled(new InvalidOperationException($"Invalid ImportSource({setting.importSource})"));
-                    return op;
-            }
-        }
-
+        /// <summary> スプレッドシートからインポート </summary>
         public AsyncOperationHandle<ImportMasterLogBuilder> ImportFromSpreadSheetAsync(
             IImportableSpreadSheetMaster master,
-            SheetDownloadKey sheetDownloadKey, CancellationToken token)
+            string spreadSheetId,
+            string sheetId,
+            CancellationToken token)
         {
             var op = new AsyncOperator<ImportMasterLogBuilder>();
 
-            if (master == null)
-            {
-                op.Canceled(new InvalidOperationException());
-                return op;
-            }
-
-            var sheetDownloadHandle = _sheetDownloader.DownloadSheetAsync(master, sheetDownloadKey, token);
-            var key = sheetDownloadKey == SheetDownloadKey.SheetId ? master.sheetId : master.sheetName;
-            ImportFromSpreadSheetInternalAsync(op, sheetDownloadHandle, master, key, token)
+            var sheetDownloadHandle = _sheetDownloader.DownloadSheetAsync(spreadSheetId, sheetId, token);
+            ImportFromSpreadSheetInternalAsync(op, sheetDownloadHandle, master, token)
                 .ContinueWith(_ => { }, token);
             return op;
         }
 
+        /// <summary> リソースからインポート </summary>
+        public AsyncOperationHandle<ImportMasterLogBuilder> ImportFromResource(
+            IImportableSpreadSheetMaster master,
+            string resourcePath)
+        {
+            var op = new AsyncOperator<ImportMasterLogBuilder>();
+
+            var csvFile = Resources.Load<TextAsset>(resourcePath);
+            if (csvFile == null)
+            {
+                op.Canceled(new InvalidOperationException($"Failed to load resource: path={resourcePath}"));
+                return op;
+            }
+
+            return ImportFromCsv(op, master, csvFile.text);
+        }
+
+        /// <summary> スプレッドシートからインポート </summary>
         private async Task ImportFromSpreadSheetInternalAsync(AsyncOperator<ImportMasterLogBuilder> op,
-            AsyncOperationHandle<string> sheetDownloadHandle, IImportableSpreadSheetMaster master,
-            string key, CancellationToken token)
+            AsyncOperationHandle<string> sheetDownloadHandle,
+            IImportableSpreadSheetMaster master,
+            CancellationToken token)
         {
             while (!sheetDownloadHandle.IsDone)
             {
@@ -83,26 +81,14 @@ namespace SpreadSheetMaster
             }
 
             var csv = sheetDownloadHandle.Result;
-            ImportFromCsv(op, master, csv, key);
+            ImportFromCsv(op, master, csv);
         }
 
-        public AsyncOperationHandle<ImportMasterLogBuilder> ImportFromResource(IImportableSpreadSheetMaster master,
-            string resourcePath)
-        {
-            var op = new AsyncOperator<ImportMasterLogBuilder>();
-
-            var csvFile = Resources.Load<TextAsset>(resourcePath);
-            if (csvFile == null)
-            {
-                op.Canceled(new InvalidOperationException($"Failed to load resource: path={resourcePath}"));
-                return op;
-            }
-
-            return ImportFromCsv(op, master, csvFile.text);
-        }
-
-        private AsyncOperationHandle<ImportMasterLogBuilder> ImportFromCsv(AsyncOperator<ImportMasterLogBuilder> op,
-            IImportableSpreadSheetMaster master, string csv, string key = "")
+        /// <summary> CSVからインポート </summary>
+        private AsyncOperationHandle<ImportMasterLogBuilder> ImportFromCsv(
+            AsyncOperator<ImportMasterLogBuilder> op,
+            IImportableSpreadSheetMaster master,
+            string csv)
         {
             if (string.IsNullOrEmpty(csv))
             {
@@ -112,7 +98,7 @@ namespace SpreadSheetMaster
 
             var records = _parser.Parse(csv, excludeHeader: true);
             var importInfo = new ImportMasterLogBuilder();
-            importInfo.Initialize(master.className, key, records.Count, _logLevel);
+            importInfo.Initialize(master.className, records.Count, _logLevel);
             try
             {
                 master.Import(records, importInfo);

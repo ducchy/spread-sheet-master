@@ -1,14 +1,18 @@
+using System;
+using System.Collections.Generic;
+
 namespace SpreadSheetMaster
 {
-    using System;
-    using System.Collections.Generic;
-
+    /// <summary> インポート可能なマスタデータ基底 </summary>
     public abstract class ImportableSpreadSheetMasterDataBase : IImportableSpreadSheetMasterData
     {
+        /// <summary> キー取得 </summary>
         public abstract int GetKey();
 
+        /// <summary> インポート時のログビルダー </summary>
         private ImportMasterLogBuilder _importLogBuilder;
 
+        /// <summary> データ設定 </summary>
         public void SetData(IReadOnlyList<string> record, ImportMasterLogBuilder importLogBuilder)
         {
             _importLogBuilder = importLogBuilder;
@@ -19,17 +23,21 @@ namespace SpreadSheetMaster
             _importLogBuilder = null;
         }
 
+        /// <summary> データ設定 </summary>
         protected abstract void SetDataInternal(IReadOnlyList<string> record);
 
+        /// <summary> カスタムデータ設定 </summary>
         protected virtual void SetCustomData(IReadOnlyList<string> record)
         {
         }
 
+        /// <summary> 範囲外インデックスか </summary>
         private bool IsIndexOutOfRange(IReadOnlyList<string> record, int index)
         {
             return record == null || index < 0 || record.Count <= index;
         }
 
+        /// <summary> 文字列取得 </summary>
         protected string GetString(IReadOnlyList<string> record, int index)
         {
             if (!IsIndexOutOfRange(record, index))
@@ -39,6 +47,7 @@ namespace SpreadSheetMaster
             return string.Empty;
         }
 
+        /// <summary> int取得 </summary>
         protected int GetInt(IReadOnlyList<string> record, int index)
         {
             if (IsIndexOutOfRange(record, index))
@@ -62,6 +71,7 @@ namespace SpreadSheetMaster
             return default;
         }
 
+        /// <summary> float取得 </summary>
         protected float GetFloat(IReadOnlyList<string> record, int index)
         {
             if (IsIndexOutOfRange(record, index))
@@ -75,9 +85,10 @@ namespace SpreadSheetMaster
                 return result;
 
             _importLogBuilder.FailedParse("float", index, str);
-            return default(float);
+            return default;
         }
 
+        /// <summary> bool取得 </summary>
         protected bool GetBool(IReadOnlyList<string> record, int index)
         {
             if (IsIndexOutOfRange(record, index))
@@ -94,6 +105,7 @@ namespace SpreadSheetMaster
             return default(bool);
         }
 
+        /// <summary> enum取得 </summary>
         protected T GetEnum<T>(IReadOnlyList<string> record, int index, T @default = default(T)) where T : struct
         {
             if (IsIndexOutOfRange(record, index))

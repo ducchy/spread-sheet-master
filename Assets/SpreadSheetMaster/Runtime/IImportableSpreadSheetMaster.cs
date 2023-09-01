@@ -1,17 +1,14 @@
+using System.Collections.Generic;
+
 namespace SpreadSheetMaster
 {
-	using System.Collections.Generic;
+    /// <summary> インポート可能なスプレッドシートマスタ </summary>
+    public interface IImportableSpreadSheetMaster
+    {
+        /// <summary> クラス名 </summary>
+        string className { get; }
 
-	public interface IImportableSpreadSheetMaster
-	{
-		string className { get; }
-		string spreadSheetId { get; }
-		string sheetId { get; }
-		string sheetName { get; }
-
-		void Import(IReadOnlyList<IReadOnlyList<string>> records, ImportMasterLogBuilder importLogBuilder);
-		
-		void OverwriteSpreadSheetId(string spreadSheetId);
-		void ClearOverwriteSpreadSheetId();
-	}
+        /// <summary> インポート </summary>
+        void Import(IReadOnlyList<IReadOnlyList<string>> records, ImportMasterLogBuilder importLogBuilder);
+    }
 }

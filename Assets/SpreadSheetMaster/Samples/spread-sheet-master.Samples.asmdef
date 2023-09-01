@@ -2,7 +2,8 @@
     "name": "spread-sheet-master.Samples",
     "rootNamespace": "",
     "references": [
-        "GUID:926c306b3feb4484ea7e17c0ba3c3eea"
+        "GUID:926c306b3feb4484ea7e17c0ba3c3eea",
+        "GUID:f51ebe6a0ceec4240a699833d6309b23"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

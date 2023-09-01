@@ -1,12 +1,5 @@
-"","id","name","age","gender","#memo","mail_address"
-"x","0","名前","","","メモ","メールアドレス"
-"","1","たろう","10.0","1","taro","taro@dmail.com"
-"","2","じろう","9.0","1","jiro","jiro@dmail.com"
-"","3","さぶろう","8.0","1","saburo","saburo@dmail.com"
-"","4","しろう","7.0","1","shiro","shiro@dmail.com"
-"","5","ごろう","6.0","1","goro","goro@dmail.com"
-"","6","ろくろう","5.0","1","rokuro","rokuro@dmail.com"
-"","7","ななろう","4.0","1","nanaro","nanaro@dmail.com"
-"","8","はちろう","3.0","1","hachiro","hachiro@dmail.com"
-"","9","くろう","2.0","1","kuro","kuro@dmail.com"
-"","10","じゅうろう","1.0","1","juuro","juuro@dmail.com"
+,id,name,age,gender,#memo,mail_address
+x,0,名前,年齢,性別,メモ,メールアドレス
+,1,Taro,4,Man,taro,taro@dmail.com
+,2,Jiro,10,Man,jiro,jiro@dmail.com
+,3,Hanako,6,Weman,hanako,hanako@dmail.com

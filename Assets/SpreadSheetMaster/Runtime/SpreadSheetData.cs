@@ -2,10 +2,11 @@ using System;
 
 namespace SpreadSheetMaster
 {
+    /// <summary> スプレッドシート情報 </summary>
     [Serializable]
     public class SpreadSheetData
     {
-        public string name;
+        /// <summary> ID </summary>
         public string id;
     }
 }

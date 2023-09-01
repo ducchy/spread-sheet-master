@@ -6,12 +6,15 @@ namespace SpreadSheetMaster
     /// <summary>
     /// 一連の処理を表すインターフェース
     /// </summary>
-    public interface IProcess<T> : IEnumerator {
-        // 結果
+    public interface IProcess<T> : IEnumerator
+    {
+        /// <summary> 結果 </summary>
         T Result { get; }
-        // 完了しているか
+
+        /// <summary> 完了しているか </summary>
         bool IsDone { get; }
-        // エラー内容
+
+        /// <summary> エラー </summary>
         Exception Exception { get; }
     }
 }

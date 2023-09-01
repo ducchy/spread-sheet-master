@@ -3,20 +3,19 @@ using System.Collections;
 
 namespace SpreadSheetMaster
 {
-    /// <summary>
-    /// 一連の処理を表すインターフェース
-    /// </summary>
+    /// <summary> 一連の処理を表すインターフェース </summary>
     public readonly struct AsyncOperationHandle<T> : IProcess<T>
     {
+        /// <summary> 一連の処理を表すインターフェース </summary>
         private readonly AsyncOperator<T> _asyncOperator;
 
-        // 結果
+        /// <summary> 結果 </summary>
         public T Result => _asyncOperator != null ? _asyncOperator.Result : default;
 
-        // 完了しているか
+        /// <summary> 完了しているか </summary>
         public bool IsDone => _asyncOperator == null || _asyncOperator.IsDone;
 
-        // キャンセル時のエラー
+        /// <summary> キャンセル時のエラー </summary>
         public Exception Exception => _asyncOperator?.Exception;
 
         /// <inheritdoc/>
