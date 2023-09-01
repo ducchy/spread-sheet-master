@@ -5,7 +5,7 @@ namespace SpreadSheetMaster.Editor
 {
     public class MasterDataScriptContentBuilder
     {
-        private readonly StringBuilder _sb = new StringBuilder();
+        private readonly StringBuilder _sb = new();
         private int _tabCount;
 
         public string Build(MasterConfigData configData, string namespaceName)

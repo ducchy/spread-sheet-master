@@ -1,31 +1,23 @@
 using System;
+using System.Collections.Generic;
 
 namespace SpreadSheetMaster
 {
-    using System.Collections.Generic;
-
+    /// <summary> インポート可能なスプレッドシートマスタ </summary>
     public abstract class ImportableSpreadSheetMasterBase<TMasterData> : IImportableSpreadSheetMaster
         where TMasterData : ImportableSpreadSheetMasterDataBase, new()
     {
-        public string className => GetType().Name;
-        protected abstract string defaultSpreadSheetId { get; }
-        public abstract string sheetId { get; }
-        public abstract string sheetName { get; }
-
-        private string _overwriteSpreadSheetId = string.Empty;
-
-        public string spreadSheetId => !string.IsNullOrEmpty(_overwriteSpreadSheetId)
-            ? _overwriteSpreadSheetId
-            : defaultSpreadSheetId;
-
-        public IReadOnlyList<int> keys => _keys;
         protected readonly Dictionary<int, TMasterData> _dataDictionary = new();
         protected readonly List<int> _keys = new();
 
+        public string className => GetType().Name;
+        public IReadOnlyList<int> keys => _keys;
         public int dataCount => _keys.Count;
-
         public TMasterData this[int key] => GetData(key);
 
+        public abstract string sheetName { get; }
+
+        /// <summary> インポート </summary>
         public void Import(IReadOnlyList<IReadOnlyList<string>> records, ImportMasterLogBuilder importLogBuilder)
         {
             _dataDictionary.Clear();
@@ -52,29 +44,25 @@ namespace SpreadSheetMaster
             PostImport();
         }
 
-        protected virtual void PreImport()
-        {
-        }
-
-        protected virtual void PostImport()
-        {
-        }
-
+        /// <summary> データ取得 </summary>
         public TMasterData GetData(int key)
         {
             return TryGetValue(key, out var value) ? value : null;
         }
 
+        /// <summary> インデックスに対応するデータ取得 </summary>
         public TMasterData GetDataByIndex(int index)
         {
             return IndexOutOfRange(index) ? null : _dataDictionary[_keys[index]];
         }
 
+        /// <summary> キーに対応する値取得 </summary>
         public bool TryGetValue(int key, out TMasterData value)
         {
             return _dataDictionary.TryGetValue(key, out value);
         }
 
+        /// <summary> データ検索 </summary>
         public TMasterData Find(Func<TMasterData, bool> condition)
         {
             if (condition == null)
@@ -87,6 +75,7 @@ namespace SpreadSheetMaster
             return null;
         }
 
+        /// <summary> データ検索 </summary>
         public List<TMasterData> FindAll(Func<TMasterData, bool> condition)
         {
             if (condition == null)
@@ -100,6 +89,7 @@ namespace SpreadSheetMaster
             return ret;
         }
 
+        /// <summary> 全データに対する処理 </summary>
         public void ForEach(Action<TMasterData> action)
         {
             if (action == null)
@@ -109,6 +99,7 @@ namespace SpreadSheetMaster
                 action.Invoke(_dataDictionary[key]);
         }
 
+        /// <summary> 全データに対する処理 </summary>
         public void ForEach(Func<TMasterData, bool> breakFunc)
         {
             if (breakFunc == null)
@@ -119,19 +110,20 @@ namespace SpreadSheetMaster
                     break;
         }
 
+        /// <summary> インポート前処理 </summary>
+        protected virtual void PreImport()
+        {
+        }
+
+        /// <summary> インポート後処理 </summary>
+        protected virtual void PostImport()
+        {
+        }
+
+        /// <summary> インデックスが範囲外か </summary>
         private bool IndexOutOfRange(int index)
         {
             return _keys == null || index < 0 || _keys.Count <= index;
-        }
-
-        public void OverwriteSpreadSheetId(string id)
-        {
-            _overwriteSpreadSheetId = id;
-        }
-
-        public void ClearOverwriteSpreadSheetId()
-        {
-            _overwriteSpreadSheetId = string.Empty;
         }
     }
 }

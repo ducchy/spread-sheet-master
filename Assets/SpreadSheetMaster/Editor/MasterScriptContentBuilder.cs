@@ -48,11 +48,6 @@ namespace SpreadSheetMaster.Editor
 
         private void AppendClassProperties(MasterConfigData configData)
         {
-            _sb.AppendTab(_tabCount)
-                .AppendFormat("protected override string defaultSpreadSheetId => \"{0}\";", configData.spreadSheetId)
-                .AppendLine();
-            _sb.AppendTab(_tabCount).AppendFormat("public override string sheetId => \"{0}\";", configData.sheetId)
-                .AppendLine();
             _sb.AppendTab(_tabCount).AppendFormat("public override string sheetName => \"{0}\";", configData.sheetName)
                 .AppendLine();
         }

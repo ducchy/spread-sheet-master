@@ -1,28 +1,24 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using System.Threading;
+using UnityEditor;
+using UnityEngine;
 
 namespace SpreadSheetMaster.Editor
 {
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Linq;
-    using System.Threading;
-    using UnityEditor;
-    using UnityEngine;
-
+    /// <summary> スプレッドシートマスタ生成ウィンドウ </summary>
     public class SpreadSheetMasterGeneratorWindow : EditorWindow
     {
-        [MenuItem("Window/Spread Sheet Master Generator")]
-        public static void ShowSpreadSheetMasterWindow()
-        {
-            var window = GetWindow<SpreadSheetMasterGeneratorWindow>();
-            window.titleContent = new GUIContent("Spread Sheet Master Generator");
-            window.Focus();
-        }
+        private readonly SheetUrlBuilder _sheetUrlBuilder = new();
+        private readonly CancellationTokenSource _cts = new();
 
         [SerializeField] private SpreadSheetSetting _setting;
-        [SerializeField] private int _spreadSheetIndex;
         [SerializeField] private int _sheetIndex;
+        [SerializeField] private string _overwriteSpreadSheetId;
+        [SerializeField] private string _overwriteSheetId;
         [SerializeField] private MasterConfigData _editMasterConfig;
 
         private bool _downloadingFlag;
@@ -35,23 +31,35 @@ namespace SpreadSheetMaster.Editor
         private Vector2 _scrollPositionCsvPreview;
         private Vector2 _scrollPositionColumns;
 
-        private readonly SheetUrlBuilder _sheetUrlBuilder = new();
-        private readonly CancellationTokenSource _cts = new();
         private CancellationToken Token => _cts.Token;
 
-        private SheetDownloadKey SheetDownloadKey => _setting.sheetDownloadKey;
-
-        private SpreadSheetData SpreadSheetData => _setting.GetSpreadSheetData(_spreadSheetIndex);
-        private string SpreadSheetId => SpreadSheetData != null ? SpreadSheetData.id : string.Empty;
+        private string SpreadSheetId => !string.IsNullOrEmpty(_overwriteSpreadSheetId)
+            ? _overwriteSpreadSheetId
+            : _setting.spreadSheetId;
 
         private SheetData SheetData => _setting.GetSheetData(_sheetIndex);
-        private string SheetId => SheetData != null ? SheetData.id : string.Empty;
+
+        private string SheetId => !string.IsNullOrEmpty(_overwriteSheetId)
+            ? _overwriteSheetId
+            : SheetData != null
+                ? SheetData.id
+                : string.Empty;
+
         private string SheetName => SheetData != null ? SheetData.name : string.Empty;
         private string SheetMasterName => SheetData != null ? SheetData.masterName : string.Empty;
 
         private string ExportNamespaceName => _setting.exportNamespaceName;
         private string ExportScriptDirectoryPath => _setting.exportScriptDirectoryPath;
         private string ExportCsvDirectoryPath => _setting.exportCsvDirectoryPath;
+
+        /// <summary> ウィンドウを開く </summary>
+        [MenuItem("Window/Spread Sheet Master Generator")]
+        public static void ShowSpreadSheetMasterWindow()
+        {
+            var window = GetWindow<SpreadSheetMasterGeneratorWindow>();
+            window.titleContent = new GUIContent("Spread Sheet Master Generator");
+            window.Focus();
+        }
 
         private void OnDestroy()
         {
@@ -115,15 +123,13 @@ namespace SpreadSheetMaster.Editor
             {
                 Undo.RecordObject(this, "Modify SpreadSheetId or SheetName");
 
-                _spreadSheetIndex = EditorGUILayout.Popup("スプレッドシート", _spreadSheetIndex,
-                    _setting.spreadSheetDataArray.Select(ssd => ssd.name).ToArray());
                 _sheetIndex = EditorGUILayout.Popup("シート", _sheetIndex,
                     _setting.sheetDataArray.Select(sd => sd.name).ToArray());
 
-                EditorGUILayout.LabelField("スプレッドシートID", SpreadSheetId);
-                EditorGUILayout.LabelField("シートID", SheetId);
-                EditorGUILayout.LabelField("シート名", SheetName);
                 EditorGUILayout.LabelField("マスタ名", SheetMasterName);
+
+                _overwriteSpreadSheetId = EditorGUILayout.TextField("上書きスプレッドシートID", _overwriteSpreadSheetId);
+                _overwriteSheetId = EditorGUILayout.TextField("上書きシートID", _overwriteSheetId);
 
                 ValidationSheetData();
 
@@ -348,9 +354,7 @@ namespace SpreadSheetMaster.Editor
             CancellationToken token)
         {
             var downloader = new SheetDownloader();
-            var downloadSheetAsync = SheetDownloadKey == SheetDownloadKey.SheetName
-                ? downloader.DownloadSheetBySheetNameAsync(spreadSheetId, sheetName, token)
-                : downloader.DownloadSheetAsync(spreadSheetId, sheetId, token);
+            var downloadSheetAsync = downloader.DownloadSheetAsync(spreadSheetId, sheetId, token);
 
             while (!downloadSheetAsync.IsDone)
                 await Task.Yield();
@@ -361,14 +365,14 @@ namespace SpreadSheetMaster.Editor
                 return;
             }
 
-            OnDownloadSuccess(downloadSheetAsync.Result, spreadSheetId, sheetId, sheetName, sheetMasterName);
+            OnDownloadSuccess(downloadSheetAsync.Result, sheetName, sheetMasterName);
         }
 
-        private void OnDownloadSuccess(string response, string spreadSheetId, string sheetId, string sheetName,
+        private void OnDownloadSuccess(string response, string sheetName,
             string sheetMasterName)
         {
             _downloadText = response;
-            _editMasterConfig = ParseCsvToConfig(_downloadText, spreadSheetId, sheetId, sheetName, sheetMasterName);
+            _editMasterConfig = ParseCsvToConfig(_downloadText, sheetName, sheetMasterName);
             _downloadingFlag = false;
         }
 
@@ -385,10 +389,10 @@ namespace SpreadSheetMaster.Editor
             if (string.IsNullOrEmpty(SpreadSheetId))
                 _downloadSheetWarning = "スプレッドシートID を入力してください";
 
-            if (SheetDownloadKey == SheetDownloadKey.SheetId && string.IsNullOrEmpty(SheetId))
+            if (string.IsNullOrEmpty(SheetId))
                 _downloadSheetWarning = "シートID を入力してください";
 
-            if (SheetDownloadKey == SheetDownloadKey.SheetName && string.IsNullOrEmpty(SheetName))
+            if (string.IsNullOrEmpty(SheetName))
                 _downloadSheetWarning = "シート名 を入力してください";
 
             if (string.IsNullOrEmpty(SheetMasterName))
@@ -400,24 +404,25 @@ namespace SpreadSheetMaster.Editor
 
         #region create_config_data
 
-        private MasterConfigData ParseCsvToConfig(string csv, string spreadSheetId, string sheetId, string sheetName,
+        private MasterConfigData ParseCsvToConfig(
+            string csv,
+            string sheetName,
             string masterName)
         {
             var parser = new CsvParser(_setting.ignoreRowConditions);
             var records = parser.Parse(csv, excludeHeader: false);
 
-            return CreateMasterConfigData(spreadSheetId, sheetId, sheetName, masterName, records);
+            return CreateMasterConfigData(sheetName, masterName, records);
         }
 
-        private MasterConfigData CreateMasterConfigData(string spreadSheetId, string sheetId, string sheetName,
+        private MasterConfigData CreateMasterConfigData(
+            string sheetName,
             string masterName,
             IReadOnlyList<IReadOnlyList<string>> records)
         {
             var config = new MasterConfigData
             {
                 masterName = StringUtility.SnakeToUpperCamel(masterName + "Master"),
-                spreadSheetId = spreadSheetId,
-                sheetId = sheetId,
                 sheetName = sheetName,
             };
 

@@ -1,19 +1,22 @@
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace SpreadSheetMaster
 {
-    using System.Collections.Generic;
-    using System.IO;
-
+    /// <summary> CSVパーサー </summary>
     public class CsvParser
     {
+        /// <summary> 行無視条件 </summary>
         private readonly IgnoreRowCondition[] _ignoreRowConditions;
 
+        /// <summary> コンストラクタ </summary>
         public CsvParser(IgnoreRowCondition[] ignoreRowConditions)
         {
             _ignoreRowConditions = ignoreRowConditions;
         }
 
+        /// <summary> パース </summary>
         public IReadOnlyList<IReadOnlyList<string>> Parse(string csv, bool excludeHeader)
         {
             var records = new List<IReadOnlyList<string>>();
@@ -34,7 +37,8 @@ namespace SpreadSheetMaster
                     var elements = line.Split(',');
                     for (var i = 0; i < elements.Length; i++)
                     {
-                        if (elements[i] == "\"\"") {
+                        if (elements[i] == "\"\"")
+                        {
                             columns.Add(string.Empty);
                             continue;
                         }
@@ -57,6 +61,7 @@ namespace SpreadSheetMaster
             return records;
         }
 
+        /// <summary> 行無視か </summary>
         private bool IsIgnoreRow(int row, List<string> columns)
         {
             if (_ignoreRowConditions == null || _ignoreRowConditions.Length == 0)
