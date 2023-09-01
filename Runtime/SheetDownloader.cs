@@ -5,46 +5,29 @@ using UnityEngine.Networking;
 
 namespace SpreadSheetMaster
 {
+    /// <summary> シートダウンローダー </summary>
     public class SheetDownloader
     {
+        /// <summary> シートURLビルダー </summary>
         private readonly SheetUrlBuilder _sheetUrlBuilder = new();
 
-        public AsyncOperationHandle<string> DownloadSheetAsync(string spreadSheetId, string sheetId,
+        /// <summary> シートダウンロード </summary>
+        public AsyncOperationHandle<string> DownloadSheetAsync(
+            string spreadSheetId,
+            string sheetId,
             CancellationToken token)
         {
-            var url = _sheetUrlBuilder.BuildExportUrl(spreadSheetId, sheetId);
+            var url = _sheetUrlBuilder.BuildExportCsvUrl(spreadSheetId, sheetId);
             var op = new AsyncOperator<string>();
             DownloadSheetAsyncInternal(op, url, token).ContinueWith(_ => { }, token);
             return op;
         }
 
-        public AsyncOperationHandle<string> DownloadSheetBySheetNameAsync(string spreadSheetId, string sheetName,
+        /// <summary> シートダウンロード </summary>
+        private async Task DownloadSheetAsyncInternal(
+            AsyncOperator<string> op,
+            string url,
             CancellationToken token)
-        {
-            var url = _sheetUrlBuilder.BuildExportUrlBySheetName(spreadSheetId, sheetName);
-            var op = new AsyncOperator<string>();
-            DownloadSheetAsyncInternal(op, url, token).ContinueWith(_ => { }, token);
-            return op;
-        }
-
-
-        public AsyncOperationHandle<string> DownloadSheetAsync(IImportableSpreadSheetMaster master,
-            SheetDownloadKey sheetDownloadKey, CancellationToken token)
-        {
-            switch (sheetDownloadKey)
-            {
-                case SheetDownloadKey.SheetId:
-                    return DownloadSheetAsync(master.spreadSheetId, master.sheetId, token);
-                case SheetDownloadKey.SheetName:
-                    return DownloadSheetBySheetNameAsync(master.spreadSheetId, master.sheetName, token);
-                default:
-                    var op = new AsyncOperator<string>();
-                    op.Canceled(new InvalidOperationException($"Invalid SheetDownloadKey({sheetDownloadKey})"));
-                    return op;
-            }
-        }
-
-        private async Task DownloadSheetAsyncInternal(AsyncOperator<string> op, string url, CancellationToken token)
         {
             UnityWebRequest request;
             try

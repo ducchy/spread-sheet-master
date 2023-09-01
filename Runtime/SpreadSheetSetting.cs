@@ -3,60 +3,62 @@ using UnityEngine;
 
 namespace SpreadSheetMaster
 {
+    /// <summary> 命名規則 </summary>
     [Serializable]
     public enum NamingConvention
     {
         /// <summary>
-        /// exampleName
+        /// ローワーキャメルケース
+        /// ex. exampleName
         /// </summary>
         LowerCamelCase,
 
         /// <summary>
-        /// ExampleName
+        /// アッパーキャメルケース
+        /// ex. ExampleName
         /// </summary>
         UpperCamelCase,
 
         /// <summary>
-        /// example_name
+        /// スネークケース
+        /// ex. example_name
         /// </summary>
         SnakeCase,
 
         /// <summary>
-        /// EXAMPLE_NAME
+        /// アッパーキャメルケース
+        /// ex. EXAMPLE_NAME
         /// </summary>
         UpperSnakeCase,
 
         /// <summary>
-        /// example-name
+        /// ケバブケース
+        /// ex. example-name
         /// </summary>
         KebabCase,
     }
 
-    [Serializable]
-    public enum SheetDownloadKey
-    {
-        SheetId,
-        SheetName,
-    }
-
+    /// <summary> ログレベル </summary>
     public enum LogLevel
     {
+        /// <summary> ログ </summary>
         Log,
+
+        /// <summary> 警告 </summary>
         Warning,
+
+        /// <summary> エラー </summary>
         Error,
+
+        /// <summary> なし </summary>
         None,
     }
 
-    public enum ImportSource
-    {
-        SpreadSheet,
-        ResourceCsv,
-    }
-
+    /// <summary> スプレッドシート設定 </summary>
     [CreateAssetMenu(fileName = "SpreadSheetSetting", menuName = "SpreadSheetMaster/ImportSetting")]
     public class SpreadSheetSetting : ScriptableObject
     {
-        [Header("シート設定")] public SpreadSheetData[] spreadSheetDataArray;
+        [Header("シート設定")] public string spreadSheetId;
         public SheetData[] sheetDataArray;
         public IgnoreColumnCondition[] ignoreColumnConditions;
         public IgnoreRowCondition[] ignoreRowConditions;
@@ -66,24 +68,14 @@ namespace SpreadSheetMaster
         public string[] findAssemblyNameList = { "Assembly-CSharp.dll" };
         public NamingConvention constantNamingConvention = NamingConvention.UpperCamelCase;
         public NamingConvention propertyNamingConvention = NamingConvention.UpperCamelCase;
-        public SheetDownloadKey sheetDownloadKey;
 
         [Header("出力設定")] public string exportNamespaceName = string.Empty;
         public string exportScriptDirectoryPath = "Assets/";
         public string exportCsvDirectoryPath = "Assets/";
 
-        [Header("インポート設定")] public ImportSource importSource = ImportSource.SpreadSheet;
-        public string importResourceDirectoryPath = "Assets/Resources/Csv";
-
         [Header("デバッグ設定")] public LogLevel logLevel = LogLevel.Log;
 
-        public SpreadSheetData GetSpreadSheetData(int index)
-        {
-            return (0 <= index && index < spreadSheetDataArray.Length)
-                ? spreadSheetDataArray[index]
-                : null;
-        }
-
+        /// <summary> シートデータを取得 </summary>
         public SheetData GetSheetData(int index)
         {
             return (0 <= index && index < sheetDataArray.Length)

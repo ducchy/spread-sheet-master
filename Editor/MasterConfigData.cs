@@ -5,8 +5,6 @@ namespace SpreadSheetMaster.Editor
     {
         public string masterName;
         public string masterDataName => masterName + "Data";
-        public string spreadSheetId;
-        public string sheetId;
         public string sheetName;
         public MasterColumnConfigData[] columns;
         public MasterColumnConfigData idMasterColumnConfigData;
