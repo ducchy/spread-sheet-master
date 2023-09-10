@@ -9,7 +9,7 @@ namespace SpreadSheetMaster
     public class SpreadSheetMasterImporter
     {
         /// <summary> パーサー </summary>
-        private readonly CsvParser _parser;
+        private readonly ICsvParser _parser;
 
         /// <summary> ログレベル </summary>
         private readonly LogLevel _logLevel;
@@ -18,7 +18,7 @@ namespace SpreadSheetMaster
         private readonly SheetDownloader _sheetDownloader = new();
 
         /// <summary> コンストラクタ </summary>
-        public SpreadSheetMasterImporter(CsvParser parser, LogLevel logLevel)
+        public SpreadSheetMasterImporter(ICsvParser parser, LogLevel logLevel)
         {
             _parser = parser;
             _logLevel = logLevel;

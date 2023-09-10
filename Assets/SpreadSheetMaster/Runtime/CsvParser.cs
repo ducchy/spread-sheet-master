@@ -5,7 +5,7 @@ using System.Linq;
 namespace SpreadSheetMaster
 {
     /// <summary> CSVパーサー </summary>
-    public class CsvParser
+    public class CsvParser : ICsvParser
     {
         /// <summary> 行無視条件 </summary>
         private readonly IgnoreRowCondition[] _ignoreRowConditions;
@@ -17,7 +17,7 @@ namespace SpreadSheetMaster
         }
 
         /// <summary> パース </summary>
-        public IReadOnlyList<IReadOnlyList<string>> Parse(string csv, bool excludeHeader)
+        IReadOnlyList<IReadOnlyList<string>> ICsvParser.Parse(string csv, bool excludeHeader)
         {
             var records = new List<IReadOnlyList<string>>();
             var reader = new StringReader(csv);
