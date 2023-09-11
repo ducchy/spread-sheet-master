@@ -1,5 +1,4 @@
 using System;
-using System.Threading;
 
 namespace SpreadSheetMaster
 {
@@ -24,8 +23,7 @@ namespace SpreadSheetMaster
         /// <summary> インポート </summary>
         public AsyncOperationHandle<ImportMasterLogBuilder> ImportAsync(
             IImportableSpreadSheetMaster master,
-            string csv,
-            CancellationToken token)
+            string csv)
         {
             var op = new AsyncOperator<ImportMasterLogBuilder>();
 

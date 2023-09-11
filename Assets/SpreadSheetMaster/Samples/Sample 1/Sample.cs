@@ -54,14 +54,14 @@ namespace SpreadSheetMaster.Samples
             var characterCsvHandle = characterCsvLoader.LoadAsync(token);
             await characterCsvHandle;
             var characterCsv = characterCsvHandle.Result;
-            var characterMasterImportHandle = _importer.ImportAsync(_characterMaster, characterCsv, token);
+            var characterMasterImportHandle = _importer.ImportAsync(_characterMaster, characterCsv);
 
             var characterDetailSheetData = sheetDataArray.First(data => data.name == _characterDetailMaster.sheetName);
             ICsvLoader characterDetailCsvLoader = new SpreadSheetCsvLoader(spreadSheetId, characterDetailSheetData.id);
             var characterDetailCsvHandle = characterDetailCsvLoader.LoadAsync(token);
             await characterDetailCsvHandle;
             var characterDetailCsv = characterDetailCsvHandle.Result;
-            var characterDetailMasterImportHandle = _importer.ImportAsync(_characterDetailMaster, characterDetailCsv, token);
+            var characterDetailMasterImportHandle = _importer.ImportAsync(_characterDetailMaster, characterDetailCsv);
 
             while (!characterMasterImportHandle.IsDone || !characterDetailMasterImportHandle.IsDone)
                 await Task.Yield();
