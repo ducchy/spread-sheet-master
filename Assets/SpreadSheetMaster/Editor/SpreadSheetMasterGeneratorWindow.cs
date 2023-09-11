@@ -409,7 +409,7 @@ namespace SpreadSheetMaster.Editor
             string sheetName,
             string masterName)
         {
-            var parser = new CsvParser(_setting.ignoreRowConditions);
+            ICsvParser parser = new CsvParser(_setting.ignoreRowConditions);
             var records = parser.Parse(csv, excludeHeader: false);
 
             return CreateMasterConfigData(sheetName, masterName, records);
