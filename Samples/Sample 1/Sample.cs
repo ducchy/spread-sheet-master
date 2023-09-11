@@ -50,11 +50,18 @@ namespace SpreadSheetMaster.Samples
             Debug.Log($"[ImportMasterAsync] ImportMasterAsync: spreadSheetId={spreadSheetId}");
 
             var characterSheetData = sheetDataArray.First(data => data.name == _characterMaster.sheetName);
-            var characterMasterImportHandle =
-                _importer.ImportFromSpreadSheetAsync(_characterMaster, spreadSheetId, characterSheetData.id, token);
+            ICsvLoader characterCsvLoader = new SpreadSheetCsvLoader(spreadSheetId, characterSheetData.id);
+            var characterCsvHandle = characterCsvLoader.LoadAsync(token);
+            await characterCsvHandle;
+            var characterCsv = characterCsvHandle.Result;
+            var characterMasterImportHandle = _importer.ImportAsync(_characterMaster, characterCsv);
+
             var characterDetailSheetData = sheetDataArray.First(data => data.name == _characterDetailMaster.sheetName);
-            var characterDetailMasterImportHandle =
-                _importer.ImportFromSpreadSheetAsync(_characterDetailMaster, spreadSheetId, characterDetailSheetData.id, token);
+            ICsvLoader characterDetailCsvLoader = new SpreadSheetCsvLoader(spreadSheetId, characterDetailSheetData.id);
+            var characterDetailCsvHandle = characterDetailCsvLoader.LoadAsync(token);
+            await characterDetailCsvHandle;
+            var characterDetailCsv = characterDetailCsvHandle.Result;
+            var characterDetailMasterImportHandle = _importer.ImportAsync(_characterDetailMaster, characterDetailCsv);
 
             while (!characterMasterImportHandle.IsDone || !characterDetailMasterImportHandle.IsDone)
                 await Task.Yield();

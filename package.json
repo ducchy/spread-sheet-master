@@ -1,6 +1,6 @@
 {
 	"name": "com.ducchy.spread-sheet-master",
-	"version": "1.4.4",
+	"version": "1.4.5",
 	"displayName": "SpreadSheetMaster",
 	"description": "An editor extension that generates model classes for google spreadsheets.",
 	"dependencies": {},
