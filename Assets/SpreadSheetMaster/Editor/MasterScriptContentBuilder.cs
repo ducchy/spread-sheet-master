@@ -6,16 +6,19 @@ namespace SpreadSheetMaster.Editor
     {
         private readonly StringBuilder _sb = new();
         private int _tabCount;
+        private MasterConfigData _configData;
         
-        public string Build(MasterConfigData configData, string namespaceName)
+        public string Build(MasterConfigData configData)
         {
+            _configData = configData;
+            
             _sb.Clear();
             _tabCount = 0;
 
             AppendUsing();
-            AppendBeginNamespaceIfNeeded(namespaceName);
-            AppendClass(configData);
-            AppendEndNamespaceIfNeeded(namespaceName);
+            AppendBeginNamespaceIfNeeded();
+            AppendClass();
+            AppendEndNamespaceIfNeeded();
 
             return _sb.ToString();
         }
@@ -26,8 +29,10 @@ namespace SpreadSheetMaster.Editor
             _sb.AppendLine();
         }
 
-        private void AppendBeginNamespaceIfNeeded(string namespaceName)
+        private void AppendBeginNamespaceIfNeeded()
         {
+            var namespaceName = _configData.exportNamespaceName;
+            
             if (string.IsNullOrEmpty(namespaceName))
                 return;
             
@@ -35,25 +40,27 @@ namespace SpreadSheetMaster.Editor
             _sb.AppendTab(_tabCount++).Append("{").AppendLine();
         }
 
-        private void AppendClass(MasterConfigData configData)
+        private void AppendClass()
         {
             _sb.AppendTab(_tabCount).AppendFormat("public partial class {0} : ImportableSpreadSheetMasterBase<{1}>",
-                configData.masterName, configData.masterDataName).AppendLine();
+                _configData.masterName, _configData.masterDataName).AppendLine();
             _sb.AppendTab(_tabCount++).Append("{").AppendLine();
 
-            AppendClassProperties(configData);
+            AppendClassProperties();
             
             _sb.AppendTab(--_tabCount).Append("}").AppendLine();
         }
 
-        private void AppendClassProperties(MasterConfigData configData)
+        private void AppendClassProperties()
         {
-            _sb.AppendTab(_tabCount).AppendFormat("public override string sheetName => \"{0}\";", configData.sheetName)
+            _sb.AppendTab(_tabCount).AppendFormat("public override string sheetName => \"{0}\";", _configData.sheetName)
                 .AppendLine();
         }
         
-        private void AppendEndNamespaceIfNeeded(string namespaceName)
+        private void AppendEndNamespaceIfNeeded()
         {
+            var namespaceName = _configData.exportNamespaceName;
+            
             if (string.IsNullOrEmpty(namespaceName))
                 return;
             

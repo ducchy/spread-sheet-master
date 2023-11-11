@@ -1,5 +1,6 @@
 using SpreadSheetMaster;
 using System.Collections.Generic;
+using SpreadSheetMaster.Samples.MyEnums;
 
 namespace SpreadSheetMaster.Samples
 {
@@ -14,8 +15,8 @@ namespace SpreadSheetMaster.Samples
 
 		public int Id { get; private set; }
 		public string Name { get; private set; }
-		public int Age { get; private set; }
-		public string Gender { get; private set; }
+		public string Age { get; private set; }
+		public GenderType Gender { get; private set; }
 		public string MailAddress { get; private set; }
 
 		public override int GetKey()
@@ -27,8 +28,8 @@ namespace SpreadSheetMaster.Samples
 		{
 			Id = GetInt(record, ColumnId);
 			Name = GetString(record, ColumnName);
-			Age = GetInt(record, ColumnAge);
-			Gender = GetString(record, ColumnGender);
+			Age = GetString(record, ColumnAge);
+			Gender = GetEnum<GenderType>(record, ColumnGender);
 			MailAddress = GetString(record, ColumnMailAddress);
 		}
 		public override string ToString()

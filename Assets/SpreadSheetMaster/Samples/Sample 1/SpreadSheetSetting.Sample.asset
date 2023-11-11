@@ -29,6 +29,7 @@ MonoBehaviour:
     conditionString: x
   findNamespaceNameList:
   - SpreadSheetMaster.Samples
+  - SpreadSheetMaster.Samples.MyEnums
   findAssemblyNameList:
   - Assembly-CSharp.dll
   - spread-sheet-master.Samples

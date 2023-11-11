@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-namespace SpreadSheetMaster.Samples
+namespace SpreadSheetMaster.Samples.MyEnums
 {
     /// <summary> 性別タイプ </summary>
     public enum GenderType
@@ -12,7 +12,10 @@ namespace SpreadSheetMaster.Samples
         Man,
         Woman,
     }
+}
 
+namespace SpreadSheetMaster.Samples
+{
     /// <summary> サンプル </summary>
     public class Sample : MonoBehaviour
     {
