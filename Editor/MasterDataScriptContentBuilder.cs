@@ -7,29 +7,48 @@ namespace SpreadSheetMaster.Editor
     {
         private readonly StringBuilder _sb = new();
         private int _tabCount;
+        private MasterConfigData _configData;
 
-        public string Build(MasterConfigData configData, string namespaceName)
+        public string Build(MasterConfigData configData)
         {
+            _configData = configData;
+            
             _sb.Clear();
             _tabCount = 0;
 
             AppendUsing();
-            AppendBeginNamespaceIfNeeded(namespaceName);
-            AppendClass(configData);
-            AppendEndNamespaceIfNeeded(namespaceName);
+            AppendBeginNamespaceIfNeeded();
+            AppendClass();
+            AppendEndNamespaceIfNeeded();
 
             return _sb.ToString();
         }
 
         private void AppendUsing()
         {
+            var additionalNamespaceNames = new List<string>();
+            foreach (var column in _configData.columns)
+            {
+                var namespaceName = column.enumType?.Namespace;
+                if (string.IsNullOrEmpty(namespaceName) || 
+                    _configData.exportNamespaceName == namespaceName ||
+                    additionalNamespaceNames.Contains(namespaceName))
+                    continue;
+
+                additionalNamespaceNames.Add(namespaceName);
+            }
+            
             _sb.AppendTab(_tabCount).Append("using SpreadSheetMaster;").AppendLine();
             _sb.AppendTab(_tabCount).Append("using System.Collections.Generic;").AppendLine();
+            foreach (var namespaceName in additionalNamespaceNames)
+                _sb.AppendTab(_tabCount).AppendFormat("using {0};", namespaceName).AppendLine();
             _sb.AppendLine();
         }
 
-        private void AppendBeginNamespaceIfNeeded(string namespaceName)
+        private void AppendBeginNamespaceIfNeeded()
         {
+            var namespaceName = _configData.exportNamespaceName;
+            
             if (string.IsNullOrEmpty(namespaceName))
                 return;
 
@@ -37,29 +56,28 @@ namespace SpreadSheetMaster.Editor
             _sb.AppendTab(_tabCount++).Append("{").AppendLine();
         }
 
-        private void AppendClass(MasterConfigData configData)
+        private void AppendClass()
         {
             _sb.AppendTab(_tabCount).AppendFormat("public partial class {0} : ImportableSpreadSheetMasterDataBase",
-                configData.masterDataName).AppendLine();
+                _configData.masterDataName).AppendLine();
             _sb.AppendTab(_tabCount++).Append("{").AppendLine();
 
-            var columnIndexConfigList = CreateColumnIndexConfigList(configData);
-            AppendClassConstants(columnIndexConfigList, configData.maxMasterColumnConfigData);
+            var columnIndexConfigList = CreateColumnIndexConfigList();
+            AppendClassConstants(columnIndexConfigList);
             AppendClassProperties(columnIndexConfigList);
-            AppendClassMethodGetId(configData.idMasterColumnConfigData);
+            AppendClassMethodGetId();
             AppendClassMethodSetData(columnIndexConfigList);
-            AppendClassMethodToString(configData, columnIndexConfigList);
+            AppendClassMethodToString(columnIndexConfigList);
 
             _sb.AppendTab(--_tabCount).Append("}").AppendLine();
         }
 
-        private List<System.Tuple<int, MasterColumnConfigData>> CreateColumnIndexConfigList(
-            MasterConfigData configData)
+        private List<System.Tuple<int, MasterColumnConfigData>> CreateColumnIndexConfigList()
         {
             var ret = new List<System.Tuple<int, MasterColumnConfigData>>();
-            for (var i = 0; i < configData.columns.Length; i++)
+            for (var i = 0; i < _configData.columns.Length; i++)
             {
-                var column = configData.columns[i];
+                var column = _configData.columns[i];
                 if (column.exportFlag && column.validFlag)
                     ret.Add(System.Tuple.Create(i, column));
             }
@@ -67,9 +85,10 @@ namespace SpreadSheetMaster.Editor
             return ret;
         }
 
-        private void AppendClassConstants(List<System.Tuple<int, MasterColumnConfigData>> columnIndexConfigList,
-            MasterColumnConfigData maxColumnConfigData)
+        private void AppendClassConstants(List<System.Tuple<int, MasterColumnConfigData>> columnIndexConfigList)
         {
+            var maxColumnConfigData = _configData.maxMasterColumnConfigData;
+            
             foreach (var columnIndexConfig in columnIndexConfigList)
                 _sb.AppendTab(_tabCount)
                     .AppendFormat("private const int {0} = {1};", columnIndexConfig.Item2.constantName,
@@ -92,8 +111,9 @@ namespace SpreadSheetMaster.Editor
             _sb.AppendLine();
         }
 
-        private void AppendClassMethodGetId(MasterColumnConfigData idMasterColumnConfigData)
+        private void AppendClassMethodGetId()
         {
+            var idMasterColumnConfigData = _configData.idMasterColumnConfigData;
             _sb.AppendTab(_tabCount).Append("public override int GetKey()").AppendLine();
             _sb.AppendTab(_tabCount++).Append("{").AppendLine();
             _sb.AppendTab(_tabCount).AppendFormat("return {0};", idMasterColumnConfigData.propertyName).AppendLine();
@@ -117,13 +137,12 @@ namespace SpreadSheetMaster.Editor
             _sb.AppendTab(--_tabCount).Append("}").AppendLine();
         }
 
-        private void AppendClassMethodToString(MasterConfigData configData,
-            List<System.Tuple<int, MasterColumnConfigData>> columnIndexConfigList)
+        private void AppendClassMethodToString(List<System.Tuple<int, MasterColumnConfigData>> columnIndexConfigList)
         {
             _sb.AppendTab(_tabCount).Append("public override string ToString()").AppendLine();
             _sb.AppendTab(_tabCount++).Append("{").AppendLine();
 
-            _sb.AppendTab(_tabCount++).AppendFormat("return \"{0} [\" +", configData.masterDataName).AppendLine();
+            _sb.AppendTab(_tabCount++).AppendFormat("return \"{0} [\" +", _configData.masterDataName).AppendLine();
             for (var i = 0; i < columnIndexConfigList.Count; i++)
             {
                 var columnIndexConfig = columnIndexConfigList[i];
@@ -137,8 +156,10 @@ namespace SpreadSheetMaster.Editor
             _sb.AppendTab(--_tabCount).Append("}").AppendLine();
         }
 
-        private void AppendEndNamespaceIfNeeded(string namespaceName)
+        private void AppendEndNamespaceIfNeeded()
         {
+            var namespaceName = _configData.exportNamespaceName;
+            
             if (string.IsNullOrEmpty(namespaceName))
                 return;
 
