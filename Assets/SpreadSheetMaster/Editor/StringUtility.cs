@@ -6,7 +6,7 @@ namespace SpreadSheetMaster.Editor {
 		#region Constants
 
 		/// <summary> 無効なファイル名文字列か </summary>
-		private static readonly System.Text.RegularExpressions.Regex INVALID_FILENAME_REGEX =
+		private static readonly System.Text.RegularExpressions.Regex InvalidFilenameRegex =
 			new(
 				"[\\x00-\\x1f<>:\"/\\\\|?*]" +
 				"|^(CON|PRN|AUX|NUL|COM[0-9]|LPT[0-9]|CLOCK\\$)(\\.|$)" +
@@ -108,7 +108,7 @@ namespace SpreadSheetMaster.Editor {
 		}
 
 		public static bool IsExistInvalidFileNameChars(string fileName) {
-			return IsExistInvalidPathChars(fileName) || INVALID_FILENAME_REGEX.IsMatch(fileName);
+			return IsExistInvalidPathChars(fileName) || InvalidFilenameRegex.IsMatch(fileName);
 		}
 
 		#endregion

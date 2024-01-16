@@ -6,7 +6,7 @@ namespace SpreadSheetMaster {
 		#region Variables
 
 		/// <summary> クラス名 </summary>
-		string className { get; }
+		string ClassName { get; }
 
 		#endregion
 

@@ -29,22 +29,22 @@ namespace SpreadSheetMaster.Editor {
 
 		private string SpreadSheetId => !string.IsNullOrEmpty(_overwriteSpreadSheetId)
 			? _overwriteSpreadSheetId
-			: _setting.spreadSheetId;
+			: _setting.SpreadSheetId;
 
 		private SheetData SheetData => _setting.GetSheetData(_sheetIndex);
 
 		private string SheetId => !string.IsNullOrEmpty(_overwriteSheetId)
 			? _overwriteSheetId
 			: SheetData != null
-				? SheetData.id
+				? SheetData.Id
 				: string.Empty;
 
-		private string SheetName => SheetData != null ? SheetData.name : string.Empty;
-		private string SheetMasterName => SheetData != null ? SheetData.masterName : string.Empty;
+		private string SheetName => SheetData != null ? SheetData.Name : string.Empty;
+		private string SheetMasterName => SheetData != null ? SheetData.MasterName : string.Empty;
 
-		private string ExportNamespaceName => _setting.exportNamespaceName;
-		private string ExportScriptDirectoryPath => _setting.exportScriptDirectoryPath;
-		private string ExportCsvDirectoryPath => _setting.exportCsvDirectoryPath;
+		private string ExportNamespaceName => _setting.ExportNamespaceName;
+		private string ExportScriptDirectoryPath => _setting.ExportScriptDirectoryPath;
+		private string ExportCsvDirectoryPath => _setting.ExportCsvDirectoryPath;
 
 		private bool _downloadingFlag;
 		private bool _batchDownloadingFlag;
@@ -126,7 +126,7 @@ namespace SpreadSheetMaster.Editor {
 				Undo.RecordObject(this, "Modify SpreadSheetId or SheetName");
 
 				_sheetIndex = EditorGUILayout.Popup("シート", _sheetIndex,
-					_setting.sheetDataArray.Select(sd => sd.name).ToArray());
+					_setting.SheetDataArray.Select(sd => sd.Name).ToArray());
 
 				EditorGUILayout.LabelField("マスタ名", SheetMasterName);
 
@@ -199,7 +199,7 @@ namespace SpreadSheetMaster.Editor {
 
 				using (new EditorGUILayout.HorizontalScope()) {
 					EditorGUILayout.LabelField("マスタ名", GUILayout.MaxWidth(80));
-					EditorGUILayout.TextField(_editMasterConfig.masterName);
+					EditorGUILayout.TextField(_editMasterConfig._masterName);
 				}
 
 				using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox)) {
@@ -220,7 +220,7 @@ namespace SpreadSheetMaster.Editor {
 
 					EditorGUILayout.Space();
 
-					if (_editMasterConfig.columns == null || _editMasterConfig.columns.Length == 0) {
+					if (_editMasterConfig._columns == null || _editMasterConfig._columns.Length == 0) {
 						EditorGUILayout.LabelField("カラムの取得に失敗");
 						return;
 					}
@@ -229,47 +229,47 @@ namespace SpreadSheetMaster.Editor {
 					using (var scroll = new EditorGUILayout.ScrollViewScope(_scrollPositionColumns)) {
 						_scrollPositionColumns = scroll.scrollPosition;
 
-						for (var i = 0; i < _editMasterConfig.columns.Length; ++i) {
-							var column = _editMasterConfig.columns[i];
+						for (var i = 0; i < _editMasterConfig._columns.Length; ++i) {
+							var column = _editMasterConfig._columns[i];
 
-							if (string.IsNullOrWhiteSpace(column.propertyName)) {
+							if (string.IsNullOrWhiteSpace(column._propertyName)) {
 								continue;
 							}
 
 							using (new EditorGUILayout.HorizontalScope()) {
-								EditorGUILayout.LabelField(column.validFlag ? "○" : "×",
+								EditorGUILayout.LabelField(column._validFlag ? "○" : "×",
 									GUILayout.MaxWidth(20));
-								column.exportFlag = EditorGUILayout.Toggle(column.exportFlag,
+								column._exportFlag = EditorGUILayout.Toggle(column._exportFlag,
 									GUILayout.MaxWidth(40));
-								EditorGUILayout.LabelField(column.propertyName,
+								EditorGUILayout.LabelField(column._propertyName,
 									GUILayout.MaxWidth(200));
 								var dataType =
-									(DataType)EditorGUILayout.EnumPopup(column.type,
+									(DataType)EditorGUILayout.EnumPopup(column._type,
 										GUILayout.MaxWidth(80));
 
-								using (new EditorGUI.DisabledScope(column.type != DataType.Enum)) {
-									column.enumTypeName =
-										EditorGUILayout.TextField(column.enumTypeName,
+								using (new EditorGUI.DisabledScope(column._type != DataType.Enum)) {
+									column._enumTypeName =
+										EditorGUILayout.TextField(column._enumTypeName,
 											GUILayout.MaxWidth(240));
 
 									if (GUILayout.Button("適用", GUILayout.MaxWidth(40))) {
-										var type = FindEnumType(column.enumTypeName);
-										column.validFlag = type != null;
-										column.enumType = type;
-										column.enumTypeName = type?.Name;
+										var type = FindEnumType(column._enumTypeName);
+										column._validFlag = type != null;
+										column.EnumType = type;
+										column._enumTypeName = type?.Name;
 									}
 								}
 
 								GUILayout.FlexibleSpace();
 
-								if (column.type != dataType) {
-									column.type = dataType;
+								if (column._type != dataType) {
+									column._type = dataType;
 									if (dataType == DataType.Enum) {
-										column.validFlag = false;
+										column._validFlag = false;
 									} else {
-										column.validFlag = true;
-										column.enumType = null;
-										column.enumTypeName = string.Empty;
+										column._validFlag = true;
+										column.EnumType = null;
+										column._enumTypeName = string.Empty;
 									}
 								}
 							}
@@ -397,7 +397,7 @@ namespace SpreadSheetMaster.Editor {
 			string csv,
 			string sheetName,
 			string masterName) {
-			ICsvParser parser = new CsvParser(_setting.ignoreRowConditions);
+			ICsvParser parser = new CsvParser(_setting.IgnoreRowConditions);
 			var records = parser.Parse(csv, false);
 
 			return CreateMasterConfigData(sheetName, masterName, records);
@@ -408,9 +408,9 @@ namespace SpreadSheetMaster.Editor {
 			string masterName,
 			IReadOnlyList<IReadOnlyList<string>> records) {
 			var config = new MasterConfigData {
-				masterName = StringUtility.SnakeToUpperCamel(masterName + "Master"),
-				sheetName = sheetName,
-				exportNamespaceName = ExportNamespaceName,
+				_masterName = StringUtility.SnakeToUpperCamel(masterName + "Master"),
+				_sheetName = sheetName,
+				_exportNamespaceName = ExportNamespaceName,
 			};
 
 			if (records == null || records.Count == 0) {
@@ -424,7 +424,7 @@ namespace SpreadSheetMaster.Editor {
 				return config;
 			}
 
-			config.columns = new MasterColumnConfigData[columnCount];
+			config._columns = new MasterColumnConfigData[columnCount];
 			for (var i = 0; i < columnCount; i++) {
 				var columnData = columnDataList != null && columnDataList.Count > i
 					? columnDataList[i]
@@ -432,13 +432,13 @@ namespace SpreadSheetMaster.Editor {
 				var columnName = columnNameList[i];
 				var column = CreateMasterConfigColumnData(columnName, columnData);
 				if (columnName == "id") {
-					config.idMasterColumnConfigData = column;
+					config._idMasterColumnConfigData = column;
 				}
 
-				config.columns[i] = column;
+				config._columns[i] = column;
 			}
 
-			config.maxMasterColumnConfigData =
+			config._maxMasterColumnConfigData =
 				CreateMasterConfigColumnData("max", columnCount.ToString());
 
 			return config;
@@ -448,22 +448,22 @@ namespace SpreadSheetMaster.Editor {
 			var exportFlag = IsExportColumn(columnName);
 			if (!exportFlag) {
 				return new MasterColumnConfigData {
-					exportFlag = false,
+					_exportFlag = false,
 				};
 			}
 
 			var column = new MasterColumnConfigData {
-				validFlag = true,
-				exportFlag = true,
-				propertyName = StringUtility.Convert(columnName,
-					_setting.columnNameNamingConvention,
-					_setting.propertyNamingConvention),
-				constantName = StringUtility.Convert("column_" + columnName,
-					_setting.columnNameNamingConvention,
-					_setting.constantNamingConvention),
-				type = GetDataTypeFromString(data),
-				enumType = null,
-				enumTypeName = string.Empty,
+				_validFlag = true,
+				_exportFlag = true,
+				_propertyName = StringUtility.Convert(columnName,
+					_setting.ColumnNameNamingConvention,
+					_setting.PropertyNamingConvention),
+				_constantName = StringUtility.Convert("column_" + columnName,
+					_setting.ColumnNameNamingConvention,
+					_setting.ConstantNamingConvention),
+				_type = GetDataTypeFromString(data),
+				EnumType = null,
+				_enumTypeName = string.Empty,
 			};
 			return column;
 		}
@@ -473,7 +473,7 @@ namespace SpreadSheetMaster.Editor {
 				return false;
 			}
 
-			return _setting.ignoreColumnConditions.All(ignoreColumnCondition =>
+			return _setting.IgnoreColumnConditions.All(ignoreColumnCondition =>
 				!ignoreColumnCondition.IsIgnore(columnName));
 		}
 
@@ -498,8 +498,8 @@ namespace SpreadSheetMaster.Editor {
 		}
 
 		private Type FindEnumType(string enumTypeName) {
-			foreach (var namespaceName in _setting.findNamespaceNameList) {
-				foreach (var assemblyName in _setting.findAssemblyNameList) {
+			foreach (var namespaceName in _setting.FindNamespaceNameList) {
+				foreach (var assemblyName in _setting.FindAssemblyNameList) {
 					var type = Type.GetType($"{namespaceName}.{enumTypeName}, {assemblyName}");
 					if (type is { IsEnum: true, }) {
 						return type;
@@ -512,7 +512,7 @@ namespace SpreadSheetMaster.Editor {
 
 		private void ValidationGenerateScript() {
 			_generateScriptWarning = string.Empty;
-			if (_editMasterConfig.idMasterColumnConfigData == null) {
+			if (_editMasterConfig._idMasterColumnConfigData == null) {
 				_generateScriptWarning = "\"id\"カラムを設定してください。";
 				return;
 			}
@@ -527,7 +527,7 @@ namespace SpreadSheetMaster.Editor {
 				return;
 			}
 
-			var fileName = $"{_editMasterConfig.masterName}.cs";
+			var fileName = $"{_editMasterConfig._masterName}.cs";
 			if (StringUtility.IsExistInvalidFileNameChars(fileName)) {
 				_generateScriptWarning = "ファイル名に使用できない文字が含まれています。";
 			}
@@ -552,14 +552,14 @@ namespace SpreadSheetMaster.Editor {
 		}
 
 		private void GenerateMasterScript(string directoryPath, MasterConfigData configData) {
-			var exportPath = $"{directoryPath}/{configData.masterName}.cs";
+			var exportPath = $"{directoryPath}/{configData._masterName}.cs";
 			var builder = new MasterScriptContentBuilder();
 			var contents = builder.Build(configData);
 			File.WriteAllText(exportPath, contents);
 		}
 
 		private void GenerateMasterDataScript(string directoryPath, MasterConfigData configData) {
-			var exportPath = $"{directoryPath}/{configData.masterDataName}.cs";
+			var exportPath = $"{directoryPath}/{configData.MasterDataName}.cs";
 			var builder = new MasterDataScriptContentBuilder();
 			var contents = builder.Build(configData);
 			File.WriteAllText(exportPath, contents);
@@ -569,10 +569,10 @@ namespace SpreadSheetMaster.Editor {
 			CancellationToken token) {
 			_batchDownloadingFlag = true;
 
-			var sheetDataList = _setting.sheetDataArray;
+			var sheetDataList = _setting.SheetDataArray;
 			foreach (var sheetData in sheetDataList) {
-				await DownloadSheetAsync(spreadSheetId, sheetData.id, sheetData.name,
-					sheetData.masterName, token);
+				await DownloadSheetAsync(spreadSheetId, sheetData.Id, sheetData.Name,
+					sheetData.MasterName, token);
 
 				ValidationGenerateScript();
 				if (!string.IsNullOrEmpty(_generateScriptWarning)) {
@@ -600,7 +600,7 @@ namespace SpreadSheetMaster.Editor {
 				return;
 			}
 
-			var fileName = $"{_editMasterConfig.masterName}.csv";
+			var fileName = $"{_editMasterConfig._masterName}.csv";
 			if (StringUtility.IsExistInvalidFileNameChars(fileName)) {
 				_generateCsvWarning = "ファイル名に使用できない文字が含まれています。";
 			}
@@ -609,7 +609,7 @@ namespace SpreadSheetMaster.Editor {
 		private void GenerateMasterCsv(MasterConfigData configData, bool withRefresh) {
 			CreateDirectoryIfNeeded(ExportCsvDirectoryPath);
 
-			var exportPath = $"{ExportCsvDirectoryPath}/{configData.masterName}.csv";
+			var exportPath = $"{ExportCsvDirectoryPath}/{configData._masterName}.csv";
 			File.WriteAllText(exportPath, _downloadText);
 
 			if (withRefresh) {
@@ -621,10 +621,10 @@ namespace SpreadSheetMaster.Editor {
 			CancellationToken token) {
 			_batchDownloadingFlag = true;
 
-			var sheetDataList = _setting.sheetDataArray;
+			var sheetDataList = _setting.SheetDataArray;
 			foreach (var sheetData in sheetDataList) {
-				await DownloadSheetAsync(spreadSheetId, sheetData.id, sheetData.name,
-					sheetData.masterName, token);
+				await DownloadSheetAsync(spreadSheetId, sheetData.Id, sheetData.Name,
+					sheetData.MasterName, token);
 
 				ValidationGenerateCsv();
 				if (!string.IsNullOrEmpty(_generateCsvWarning)) {

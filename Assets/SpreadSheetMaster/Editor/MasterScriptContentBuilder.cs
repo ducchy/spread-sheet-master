@@ -32,7 +32,7 @@ namespace SpreadSheetMaster.Editor {
 		}
 
 		private void AppendBeginNamespaceIfNeeded() {
-			var namespaceName = _configData.exportNamespaceName;
+			var namespaceName = _configData._exportNamespaceName;
 
 			if (string.IsNullOrEmpty(namespaceName)) {
 				return;
@@ -44,7 +44,7 @@ namespace SpreadSheetMaster.Editor {
 
 		private void AppendClass() {
 			_sb.AppendTab(_tabCount).AppendFormat("public partial class {0} : ImportableSpreadSheetMasterBase<{1}>",
-				_configData.masterName, _configData.masterDataName).AppendLine();
+				_configData._masterName, _configData.MasterDataName).AppendLine();
 			_sb.AppendTab(_tabCount++).Append("{").AppendLine();
 
 			AppendClassProperties();
@@ -53,12 +53,12 @@ namespace SpreadSheetMaster.Editor {
 		}
 
 		private void AppendClassProperties() {
-			_sb.AppendTab(_tabCount).AppendFormat("public override string sheetName => \"{0}\";", _configData.sheetName)
+			_sb.AppendTab(_tabCount).AppendFormat("public override string sheetName => \"{0}\";", _configData._sheetName)
 				.AppendLine();
 		}
 
 		private void AppendEndNamespaceIfNeeded() {
-			var namespaceName = _configData.exportNamespaceName;
+			var namespaceName = _configData._exportNamespaceName;
 
 			if (string.IsNullOrEmpty(namespaceName)) {
 				return;

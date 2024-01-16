@@ -2,7 +2,7 @@ namespace SpreadSheetMaster.Samples {
 	public class CharacterMaster : ImportableSpreadSheetMasterBase<CharacterMasterData> {
 		#region Variables
 
-		public override string sheetName => "キャラクター";
+		public override string SheetName => "キャラクター";
 
 		#endregion
 	}

@@ -7,11 +7,11 @@ namespace SpreadSheetMaster {
 		where TMasterData : ImportableSpreadSheetMasterDataBase, new() {
 		#region Variables
 
-		public string className => GetType().Name;
-		public IReadOnlyList<int> keys => _keys;
-		public int dataCount => _keys.Count;
+		public string ClassName => GetType().Name;
+		public IReadOnlyList<int> Keys => _keys;
+		public int DataCount => _keys.Count;
 
-		public abstract string sheetName { get; }
+		public abstract string SheetName { get; }
 		protected readonly Dictionary<int, TMasterData> _dataDictionary = new();
 		protected readonly List<int> _keys = new();
 

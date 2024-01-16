@@ -18,10 +18,10 @@ namespace SpreadSheetMaster {
 		#region Serialize Fields
 
 		/// <summary> 無視条件タイプ </summary>
-		public Type type;
+		public Type _type;
 
 		/// <summary> 条件文字列 </summary>
-		public string conditionString;
+		public string _conditionString;
 
 		#endregion
 
@@ -29,9 +29,9 @@ namespace SpreadSheetMaster {
 
 		/// <summary> 無視条件か </summary>
 		public bool IsIgnore(string columnName) {
-			switch (type) {
+			switch (_type) {
 				case Type.ContainString:
-					return columnName.IndexOf(conditionString, StringComparison.Ordinal) != -1;
+					return columnName.IndexOf(_conditionString, StringComparison.Ordinal) != -1;
 				default:
 					return false;
 			}

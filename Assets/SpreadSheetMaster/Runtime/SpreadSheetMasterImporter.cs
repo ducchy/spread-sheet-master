@@ -49,7 +49,7 @@ namespace SpreadSheetMaster {
 
 			// インポート
 			var importInfo = new ImportMasterLogBuilder();
-			importInfo.Initialize(master.className, records.Count, _logLevel);
+			importInfo.Initialize(master.ClassName, records.Count, _logLevel);
 			try {
 				master.Import(records, importInfo);
 			} catch (Exception e) {

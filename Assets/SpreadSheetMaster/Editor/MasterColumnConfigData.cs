@@ -3,19 +3,19 @@ namespace SpreadSheetMaster.Editor {
 	public class MasterColumnConfigData {
 		#region Serialize Fields
 
-		public bool validFlag;
-		public bool exportFlag;
-		public string propertyName;
-		public string constantName;
-		public DataType type;
-		public string enumTypeName;
+		public bool _validFlag;
+		public bool _exportFlag;
+		public string _propertyName;
+		public string _constantName;
+		public DataType _type;
+		public string _enumTypeName;
 
 		#endregion
 
 		#region Variables
 
-		public string typeName => type == DataType.Enum ? enumTypeName : type.ToString().ToLower();
-		public System.Type enumType;
+		public string TypeName => _type == DataType.Enum ? _enumTypeName : _type.ToString().ToLower();
+		public System.Type EnumType;
 
 		#endregion
 	}

@@ -22,13 +22,13 @@ namespace SpreadSheetMaster {
 		#region Serialize Fields
 
 		/// <summary> 無視条件タイプ </summary>
-		public Type type;
+		public Type _type;
 
 		/// <summary> 条件数値 </summary>
-		public int conditionInt;
+		public int _conditionInt;
 
 		/// <summary> 条件文字列 </summary>
-		public string conditionString;
+		public string _conditionString;
 
 		#endregion
 
@@ -36,11 +36,11 @@ namespace SpreadSheetMaster {
 
 		/// <summary> 無視条件か </summary>
 		public bool IsIgnore(int row, List<string> columns) {
-			switch (type) {
+			switch (_type) {
 				case Type.MatchLine:
-					return row == conditionInt;
+					return row == _conditionInt;
 				case Type.MatchStringInFirstColumn:
-					return columns != null && columns.Count >= 1 && columns[0] == conditionString;
+					return columns != null && columns.Count >= 1 && columns[0] == _conditionString;
 				default:
 					return false;
 			}

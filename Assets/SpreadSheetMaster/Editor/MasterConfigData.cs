@@ -3,18 +3,18 @@ namespace SpreadSheetMaster.Editor {
 	public class MasterConfigData {
 		#region Serialize Fields
 
-		public string masterName;
-		public string sheetName;
-		public string exportNamespaceName;
-		public MasterColumnConfigData[] columns;
-		public MasterColumnConfigData idMasterColumnConfigData;
-		public MasterColumnConfigData maxMasterColumnConfigData;
+		public string _masterName;
+		public string _sheetName;
+		public string _exportNamespaceName;
+		public MasterColumnConfigData[] _columns;
+		public MasterColumnConfigData _idMasterColumnConfigData;
+		public MasterColumnConfigData _maxMasterColumnConfigData;
 
 		#endregion
 
 		#region Variables
 
-		public string masterDataName => masterName + "Data";
+		public string MasterDataName => _masterName + "Data";
 
 		#endregion
 	}
