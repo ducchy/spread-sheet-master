@@ -1,65 +1,65 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SpreadSheetMaster
-{
-    /// <summary> スプレッドシートCSVローダー </summary>
-    public class SpreadSheetCsvLoader : ICsvLoader
-    {
-        private readonly string _spreadSheetId;
-        private readonly string _sheetId;
+namespace SpreadSheetMaster {
+	/// <summary> スプレッドシートCSVローダー </summary>
+	public class SpreadSheetCsvLoader : ICsvLoader {
+		#region Variables
 
-        private readonly SheetDownloader _sheetDownloader;
+		private readonly string _spreadSheetId;
+		private readonly string _sheetId;
 
-        /// <summary> コンストラクタ </summary>
-        public SpreadSheetCsvLoader(
-            string spreadSheetId,
-            string sheetId)
-        {
-            _spreadSheetId = spreadSheetId;
-            _sheetId = sheetId;
+		private readonly SheetDownloader _sheetDownloader;
 
-            _sheetDownloader = new SheetDownloader();
-        }
+		#endregion
 
-        /// <summary> ロード </summary>
-        AsyncOperationHandle<string> ICsvLoader.LoadAsync(CancellationToken token)
-        {
-            var op = new AsyncOperator<string>();
+		#region Methods
 
-            var sheetDownloadHandle = _sheetDownloader.DownloadSheetAsync(_spreadSheetId, _sheetId, token);
-            LoadAsyncInternal(op, sheetDownloadHandle, token)
-                .ContinueWith(_ => { }, token);
+		/// <summary> コンストラクタ </summary>
+		public SpreadSheetCsvLoader(
+			string spreadSheetId,
+			string sheetId) {
+			_spreadSheetId = spreadSheetId;
+			_sheetId = sheetId;
 
-            return op;
-        }
+			_sheetDownloader = new SheetDownloader();
+		}
 
-        /// <summary> ロード </summary>
-        private async Task LoadAsyncInternal(
-            AsyncOperator<string> op,
-            AsyncOperationHandle<string> sheetDownloadHandle,
-            CancellationToken token)
-        {
-            while (!sheetDownloadHandle.IsDone)
-            {
-                if (token.IsCancellationRequested)
-                {
-                    token.ThrowIfCancellationRequested();
-                    op.Canceled();
-                    return;
-                }
+		/// <summary> ロード </summary>
+		AsyncOperationHandle<string> ICsvLoader.LoadAsync(CancellationToken token) {
+			var op = new AsyncOperator<string>();
 
-                await Task.Yield();
-            }
+			var sheetDownloadHandle = _sheetDownloader.DownloadSheetAsync(_spreadSheetId, _sheetId, token);
+			LoadAsyncInternal(op, sheetDownloadHandle, token)
+				.ContinueWith(_ => { }, token);
 
-            if (sheetDownloadHandle.Exception != null)
-            {
-                op.Canceled(sheetDownloadHandle.Exception);
-                return;
-            }
+			return op;
+		}
 
-            var csv = sheetDownloadHandle.Result;
-            op.Completed(csv);
-        }
-    }
+		/// <summary> ロード </summary>
+		private async Task LoadAsyncInternal(
+			AsyncOperator<string> op,
+			AsyncOperationHandle<string> sheetDownloadHandle,
+			CancellationToken token) {
+			while (!sheetDownloadHandle.IsDone) {
+				if (token.IsCancellationRequested) {
+					token.ThrowIfCancellationRequested();
+					op.Canceled();
+					return;
+				}
+
+				await Task.Yield();
+			}
+
+			if (sheetDownloadHandle.Exception != null) {
+				op.Canceled(sheetDownloadHandle.Exception);
+				return;
+			}
+
+			var csv = sheetDownloadHandle.Result;
+			op.Completed(csv);
+		}
+
+		#endregion
+	}
 }

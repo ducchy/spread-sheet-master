@@ -1,70 +1,69 @@
 using System;
 
-namespace SpreadSheetMaster
-{
-    /// <summary> スプレッドシートインポート </summary>
-    public class SpreadSheetMasterImporter
-    {
-        /// <summary> csvパーサー </summary>
-        private readonly ICsvParser _parser;
+namespace SpreadSheetMaster {
+	/// <summary> スプレッドシートインポート </summary>
+	public class SpreadSheetMasterImporter {
+		#region Variables
 
-        /// <summary> ログレベル </summary>
-        private readonly LogLevel _logLevel;
+		/// <summary> csvパーサー </summary>
+		private readonly ICsvParser _parser;
 
-        /// <summary> コンストラクタ </summary>
-        public SpreadSheetMasterImporter(
-            ICsvParser parser,
-            LogLevel logLevel)
-        {
-            _parser = parser;
-            _logLevel = logLevel;
-        }
+		/// <summary> ログレベル </summary>
+		private readonly LogLevel _logLevel;
 
-        /// <summary> インポート </summary>
-        public AsyncOperationHandle<ImportMasterLogBuilder> ImportAsync(
-            IImportableSpreadSheetMaster master,
-            string csv)
-        {
-            var op = new AsyncOperator<ImportMasterLogBuilder>();
+		#endregion
 
-            ImportFromCsv(op, master, csv);
+		#region Methods
 
-            return op;
-        }
+		/// <summary> コンストラクタ </summary>
+		public SpreadSheetMasterImporter(
+			ICsvParser parser,
+			LogLevel logLevel) {
+			_parser = parser;
+			_logLevel = logLevel;
+		}
 
-        /// <summary> CSVからインポート </summary>
-        private void ImportFromCsv(
-            AsyncOperator<ImportMasterLogBuilder> op,
-            IImportableSpreadSheetMaster master,
-            string csv)
-        {
-            if (string.IsNullOrEmpty(csv))
-            {
-                op.Canceled(new InvalidOperationException("csv is empty"));
-                return;
-            }
+		/// <summary> インポート </summary>
+		public AsyncOperationHandle<ImportMasterLogBuilder> ImportAsync(
+			IImportableSpreadSheetMaster master,
+			string csv) {
+			var op = new AsyncOperator<ImportMasterLogBuilder>();
 
-            // パース
-            var records = _parser.Parse(csv, excludeHeader: true);
+			ImportFromCsv(op, master, csv);
 
-            // インポート
-            var importInfo = new ImportMasterLogBuilder();
-            importInfo.Initialize(master.className, records.Count, _logLevel);
-            try
-            {
-                master.Import(records, importInfo);
-            }
-            catch (Exception e)
-            {
-                // インポート失敗
-                importInfo.Exception(e);
-                op.Canceled(e);
-                return;
-            }
+			return op;
+		}
 
-            // インポート成功
-            importInfo.ExportLog();
-            op.Completed(importInfo);
-        }
-    }
+		/// <summary> CSVからインポート </summary>
+		private void ImportFromCsv(
+			AsyncOperator<ImportMasterLogBuilder> op,
+			IImportableSpreadSheetMaster master,
+			string csv) {
+			if (string.IsNullOrEmpty(csv)) {
+				op.Canceled(new InvalidOperationException("csv is empty"));
+				return;
+			}
+
+			// パース
+			var records = _parser.Parse(csv, true);
+
+			// インポート
+			var importInfo = new ImportMasterLogBuilder();
+			importInfo.Initialize(master.className, records.Count, _logLevel);
+			try {
+				master.Import(records, importInfo);
+			} catch (Exception e) {
+				// インポート失敗
+				importInfo.Exception(e);
+				op.Canceled(e);
+				return;
+			}
+
+			// インポート成功
+			importInfo.ExportLog();
+			op.Completed(importInfo);
+		}
+
+		#endregion
+	}
 }

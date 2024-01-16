@@ -1,18 +1,20 @@
 using System;
 
-namespace SpreadSheetMaster
-{
-    /// <summary> シート情報 </summary>
-    [Serializable]
-    public class SheetData
-    {
-        /// <summary> 名前 </summary>
-        public string name;
+namespace SpreadSheetMaster {
+	/// <summary> シート情報 </summary>
+	[Serializable]
+	public class SheetData {
+		#region Serialize Fields
 
-        /// <summary> ID </summary>
-        public string id;
+		/// <summary> 名前 </summary>
+		public string name;
 
-        /// <summary> マスタ名 </summary>
-        public string masterName;
-    }
+		/// <summary> ID </summary>
+		public string id;
+
+		/// <summary> マスタ名 </summary>
+		public string masterName;
+
+		#endregion
+	}
 }

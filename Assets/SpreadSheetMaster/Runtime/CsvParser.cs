@@ -2,72 +2,75 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace SpreadSheetMaster
-{
-    /// <summary> CSVパーサー </summary>
-    public class CsvParser : ICsvParser
-    {
-        /// <summary> 行無視条件 </summary>
-        private readonly IgnoreRowCondition[] _ignoreRowConditions;
+namespace SpreadSheetMaster {
+	/// <summary> CSVパーサー </summary>
+	public class CsvParser : ICsvParser {
+		#region Variables
 
-        /// <summary> コンストラクタ </summary>
-        public CsvParser(IgnoreRowCondition[] ignoreRowConditions)
-        {
-            _ignoreRowConditions = ignoreRowConditions;
-        }
+		/// <summary> 行無視条件 </summary>
+		private readonly IgnoreRowCondition[] _ignoreRowConditions;
 
-        /// <summary> パース </summary>
-        IReadOnlyList<IReadOnlyList<string>> ICsvParser.Parse(string csv, bool excludeHeader)
-        {
-            var records = new List<IReadOnlyList<string>>();
-            var reader = new StringReader(csv);
+		#endregion
 
-            if (excludeHeader && reader.Peek() != -1)
-                reader.ReadLine();
+		#region Methods
 
-            var row = excludeHeader ? 2 : 1;
-            while (reader.Peek() != -1)
-            {
-                var line = reader.ReadLine();
+		/// <summary> コンストラクタ </summary>
+		public CsvParser(IgnoreRowCondition[] ignoreRowConditions) {
+			_ignoreRowConditions = ignoreRowConditions;
+		}
 
-                var columns = new List<string>();
-                if (line != null)
-                {
-                    var empty = true;
-                    var elements = line.Split(',');
-                    for (var i = 0; i < elements.Length; i++)
-                    {
-                        if (elements[i] == "\"\"")
-                        {
-                            columns.Add(string.Empty);
-                            continue;
-                        }
+		/// <summary> パース </summary>
+		IReadOnlyList<IReadOnlyList<string>> ICsvParser.Parse(string csv, bool excludeHeader) {
+			var records = new List<IReadOnlyList<string>>();
+			var reader = new StringReader(csv);
 
-                        elements[i] = elements[i].TrimStart('"').TrimEnd('"');
-                        columns.Add(elements[i]);
-                        empty = false;
-                    }
+			if (excludeHeader && reader.Peek() != -1) {
+				reader.ReadLine();
+			}
 
-                    if (empty)
-                        break;
-                }
+			var row = excludeHeader ? 2 : 1;
+			while (reader.Peek() != -1) {
+				var line = reader.ReadLine();
 
-                if (IsIgnoreRow(row++, columns))
-                    continue;
+				var columns = new List<string>();
+				if (line != null) {
+					var empty = true;
+					var elements = line.Split(',');
+					for (var i = 0; i < elements.Length; i++) {
+						if (elements[i] == "\"\"") {
+							columns.Add(string.Empty);
+							continue;
+						}
 
-                records.Add(columns);
-            }
+						elements[i] = elements[i].TrimStart('"').TrimEnd('"');
+						columns.Add(elements[i]);
+						empty = false;
+					}
 
-            return records;
-        }
+					if (empty) {
+						break;
+					}
+				}
 
-        /// <summary> 行無視か </summary>
-        private bool IsIgnoreRow(int row, List<string> columns)
-        {
-            if (_ignoreRowConditions == null || _ignoreRowConditions.Length == 0)
-                return false;
+				if (IsIgnoreRow(row++, columns)) {
+					continue;
+				}
 
-            return _ignoreRowConditions.Any(ignoreRowCondition => ignoreRowCondition.IsIgnore(row, columns));
-        }
-    }
+				records.Add(columns);
+			}
+
+			return records;
+		}
+
+		/// <summary> 行無視か </summary>
+		private bool IsIgnoreRow(int row, List<string> columns) {
+			if (_ignoreRowConditions == null || _ignoreRowConditions.Length == 0) {
+				return false;
+			}
+
+			return _ignoreRowConditions.Any(ignoreRowCondition => ignoreRowCondition.IsIgnore(row, columns));
+		}
+
+		#endregion
+	}
 }

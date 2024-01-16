@@ -1,14 +1,20 @@
 using System.Collections.Generic;
 
-namespace SpreadSheetMaster
-{
-    /// <summary> インポート可能なスプレッドシートマスタ </summary>
-    public interface IImportableSpreadSheetMaster
-    {
-        /// <summary> クラス名 </summary>
-        string className { get; }
+namespace SpreadSheetMaster {
+	/// <summary> インポート可能なスプレッドシートマスタ </summary>
+	public interface IImportableSpreadSheetMaster {
+		#region Variables
 
-        /// <summary> インポート </summary>
-        void Import(IReadOnlyList<IReadOnlyList<string>> records, ImportMasterLogBuilder importLogBuilder);
-    }
+		/// <summary> クラス名 </summary>
+		string className { get; }
+
+		#endregion
+
+		#region Methods
+
+		/// <summary> インポート </summary>
+		void Import(IReadOnlyList<IReadOnlyList<string>> records, ImportMasterLogBuilder importLogBuilder);
+
+		#endregion
+	}
 }

@@ -1,9 +1,9 @@
-using SpreadSheetMaster;
+namespace SpreadSheetMaster.Samples {
+	public class CharacterMaster : ImportableSpreadSheetMasterBase<CharacterMasterData> {
+		#region Variables
 
-namespace SpreadSheetMaster.Samples
-{
-	public partial class CharacterMaster : ImportableSpreadSheetMasterBase<CharacterMasterData>
-	{
 		public override string sheetName => "キャラクター";
+
+		#endregion
 	}
 }
