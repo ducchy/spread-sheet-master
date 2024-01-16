@@ -1,0 +1,273 @@
+root = true
+
+[*.cs]
+# 文字コード
+charset = utf-8
+# 改行コード
+end_of_line = crlf
+
+# インデントサイズ
+indent_size = 4
+# インデントスタイル
+indent_style = tab
+
+# 行末の半角スペース削除有無
+trim_trailing_whitespace = true
+
+### コードスタイル
+# フィールドの前にthis
+dotnet_style_qualification_for_field = false:error
+# プロパティの前にthis
+dotnet_style_qualification_for_property = false:error
+# メソッドの前にthis
+dotnet_style_qualification_for_method = false:error
+# イベントの前にthis
+dotnet_style_qualification_for_event = false:error
+
+# パラメーターに言語キーワードを使用
+dotnet_style_predefined_type_for_locals_parameters_members = true:error
+# メンバーに言語キーワードを使用
+dotnet_style_predefined_type_for_member_access = true:error
+
+# アクセシビリティ修飾子必須
+dotnet_style_require_accessibility_modifiers = always:error
+# 指定された順序を優先
+csharp_preferred_modifier_order = public,private,protected,internal,static,extern,new,virtual,abstract,sealed,override,readonly,unsafe,volatile,async:error
+
+# オブジェクト初期化子を使用してオブジェクトを初期化
+#dotnet_style_object_initializer = true:error
+# コレクション初期化子を使用してコレクションを初期化
+#dotnet_style_collection_initializer = true:error
+# ItemX プロパティではなくタプル名を使用
+dotnet_style_explicit_tuple_names = true:error
+# 推論されたタプル要素名が優先
+dotnet_style_prefer_inferred_tuple_names = true:error
+# 推論された匿名型のメンバー名が優先
+dotnet_style_prefer_inferred_anonymous_type_member_names = true:error
+
+# null 結合式ではなく三項演算子チェックを使用
+dotnet_style_coalesce_expression = false:error
+# 可能であれば、三項 null チェックを使用
+dotnet_style_null_propagation = false:error
+
+# ビルトイン システム型で変数を宣言する場合に var ではなく明示的な型を使用
+csharp_style_var_for_built_in_types = true
+# 宣言式の右側で型が既に示されているときに var ではなく明示的な型を使用
+csharp_style_var_when_type_is_apparent = true:error
+csharp_style_var_elsewhere = true:error
+
+# メソッドにブロック本体を使用
+csharp_style_expression_bodied_methods = false:error
+# コンストラクターにブロック本体を使用
+csharp_style_expression_bodied_constructors = false:error
+# 演算子にブロック本体を使用
+csharp_style_expression_bodied_operators = false:error
+# インデクサーにブロック本体を使用
+csharp_style_expression_bodied_indexers = false:error
+# アクセサーにブロック本体を使用
+csharp_style_expression_bodied_accessors = false:error
+
+# パターン マッチングの代わりに is 式と型キャストを使用
+csharp_style_pattern_matching_over_is_with_cast_check = false:error
+# パターン マッチングの代わりに as 式と null チェックを使用
+csharp_style_pattern_matching_over_as_with_null_check = false:error
+
+# メソッド呼び出しの前に out 変数を宣言
+csharp_style_inlined_variable_declaration = false:error
+
+# default より default(T) を優先
+csharp_prefer_simple_default_expression = false:error
+# 変数宣言では分解を優先しません
+csharp_style_deconstructed_variable_declaration = false:error
+# ローカル関数より匿名関数を優先
+#csharp_style_pattern_local_over_anonymous_function = false:error
+# throw 式の代わりに throw ステートメントを使用
+csharp_style_throw_expression = false:error
+# 条件付き合体演算子 (?.) を使用する代わりに、ラムダ式を呼び出す前に null チェックを実行
+csharp_style_conditional_delegate_call = false:error
+
+# コードが 1 行であっても中かっこを使用
+csharp_prefer_braces = true:error
+
+### コードスタイル
+
+
+### 書式設定
+# usingをアルファベット順に並べ替える
+dotnet_sort_system_directives_first = true
+
+# 「中かっこ（{）」を新しい行に配置するか
+csharp_new_line_before_open_brace = none
+# 「else」を新しい行に配置するか
+csharp_new_line_before_else = false
+# 「catch」を新しい行に配置するか
+csharp_new_line_before_catch = false
+# 「finally」を新しい行に配置するか
+csharp_new_line_before_finally = false
+
+# 初期化子メンバーを別の行に配置
+csharp_new_line_before_members_in_object_initializers = true
+# 匿名型メンバーを別の行に配置
+csharp_new_line_before_members_in_anonymous_types = true
+# クエリ式の句の要素を別の行に配置
+csharp_new_line_between_query_expression_clauses = true
+
+# 「switch case」のインデント有無
+csharp_indent_case_contents = true
+# 「switch」のインデント有無
+csharp_indent_switch_labels = true
+# ラベルの配置場所
+csharp_indent_labels = flush_left
+
+# キャストと値の間のスペース有無
+csharp_space_after_cast = false
+# キーワード後のスペース有無
+csharp_space_after_keywords_in_control_flow_statements = true
+# メソッド宣言パラメーターに空白を配置するか
+csharp_space_between_method_declaration_parameter_list_parentheses = false
+# メソッド呼び出しパラメーターに空白を配置するか
+csharp_space_between_method_call_parameter_list_parentheses = false
+# かっこの間にスペース
+#csharp_space_between_parentheses = control_flow_statements, type_casts
+# 1 行に複数のステートメントとメンバー宣言
+csharp_preserve_single_line_statements = false
+
+### 書式設定
+
+### 命名規則
+# namespace_must_be_pascal_case : namespaceは必ずパスカルケース
+dotnet_naming_rule.namespace_must_be_pascal_case.severity = error
+dotnet_naming_rule.namespace_must_be_pascal_case.symbols = namespace
+dotnet_naming_rule.namespace_must_be_pascal_case.style = pascal_case
+# class_must_be_pascal_case : classは必ずパスカルケース
+dotnet_naming_rule.class_must_be_pascal_case.severity = error
+dotnet_naming_rule.class_must_be_pascal_case.symbols = class
+dotnet_naming_rule.class_must_be_pascal_case.style = pascal_case
+# interface_must_be_i_and_pascal_case : interfaceは必ずiから始まるパスカルケース
+dotnet_naming_rule.interface_must_be_i_and_pascal_case.severity = error
+dotnet_naming_rule.interface_must_be_i_and_pascal_case.symbols = interface
+dotnet_naming_rule.interface_must_be_i_and_pascal_case.style = i_and_pascal_case
+# enum_must_be_pascal_case : enumは必ずパスカルケース
+dotnet_naming_rule.enum_must_be_pascal_case.severity = error
+dotnet_naming_rule.enum_must_be_pascal_case.symbols = enum
+dotnet_naming_rule.enum_must_be_pascal_case.style = pascal_case
+# method_must_be_pascal_case : methodは必ずパスカルケース
+dotnet_naming_rule.method_must_be_pascal_case.severity = error
+dotnet_naming_rule.method_must_be_pascal_case.symbols = method
+dotnet_naming_rule.method_must_be_pascal_case.style = pascal_case
+# public_field_must_be_pascal_case : public_fieldは必ずパスカルケース
+dotnet_naming_rule.public_field_must_be_pascal_case.severity = error
+dotnet_naming_rule.public_field_must_be_pascal_case.symbols = public_field
+dotnet_naming_rule.public_field_must_be_pascal_case.style = pascal_case
+# non_public_field_must_be_underscore_and_camel_case : non_public_fieldは必ずアンダースコアから始まるキャメルケース
+dotnet_naming_rule.non_public_field_must_be_underscore_and_camel_case.severity = error
+dotnet_naming_rule.non_public_field_must_be_underscore_and_camel_case.symbols = non_public_field
+dotnet_naming_rule.non_public_field_must_be_underscore_and_camel_case.style = underscore_and_camel_case
+# static_field_must_be_pascal_case : static_fieldは必ずパスカルケース
+dotnet_naming_rule.static_field_must_be_pascal_case.severity = error
+dotnet_naming_rule.static_field_must_be_pascal_case.symbols = static_field
+dotnet_naming_rule.static_field_must_be_pascal_case.style = pascal_case
+# const_field_must_be_pascal_case : const_fieldは必ずパスカルケース
+dotnet_naming_rule.const_field_must_be_pascal_case.severity = error
+dotnet_naming_rule.const_field_must_be_pascal_case.symbols = const_field
+dotnet_naming_rule.const_field_must_be_pascal_case.style = pascal_case
+# public_property_must_be_pascal_case : public_propertyは必ずパスカルケース
+dotnet_naming_rule.public_property_must_be_pascal_case.severity = error
+dotnet_naming_rule.public_property_must_be_pascal_case.symbols = public_property
+dotnet_naming_rule.public_property_must_be_pascal_case.style = pascal_case
+# non_public_property_must_be_pascal_case : non_public_propertyは必ずパスカルケース
+dotnet_naming_rule.non_public_property_must_be_pascal_case.severity = error
+dotnet_naming_rule.non_public_property_must_be_pascal_case.symbols = non_public_property
+dotnet_naming_rule.non_public_property_must_be_pascal_case.style = pascal_case
+# static_property_must_be_pascal_case : static_propertyは必ずパスカルケース
+dotnet_naming_rule.static_property_must_be_pascal_case.severity = error
+dotnet_naming_rule.static_property_must_be_pascal_case.symbols = static_property
+dotnet_naming_rule.static_property_must_be_pascal_case.style = pascal_case
+# parameter_must_be_camel_case : parameterは必ずキャメルケース
+dotnet_naming_rule.parameter_must_be_camel_case.severity = error
+dotnet_naming_rule.parameter_must_be_camel_case.symbols = parameter
+dotnet_naming_rule.parameter_must_be_camel_case.style = camel_case
+# local_must_be_camel_case : localは必ずキャメルケース
+dotnet_naming_rule.local_must_be_camel_case.severity = error
+dotnet_naming_rule.local_must_be_camel_case.symbols = local
+dotnet_naming_rule.local_must_be_camel_case.style = camel_case
+
+### 命名シンボル
+# namespace
+dotnet_naming_symbols.namespace.applicable_kinds = namespace
+dotnet_naming_symbols.namespace.applicable_accessibilities = *
+dotnet_naming_symbols.namespace.required_modifiers = 
+# class
+dotnet_naming_symbols.class.applicable_kinds = class
+dotnet_naming_symbols.class.applicable_accessibilities = public, internal, private, protected, protected_internal, private_protected
+dotnet_naming_symbols.class.required_modifiers = 
+# interface
+dotnet_naming_symbols.interface.applicable_kinds = interface
+dotnet_naming_symbols.interface.applicable_accessibilities = public, internal, private, protected, protected_internal, private_protected
+dotnet_naming_symbols.interface.required_modifiers = 
+# enum
+dotnet_naming_symbols.enum.applicable_kinds = enum
+dotnet_naming_symbols.enum.applicable_accessibilities = public, internal, private, protected, protected_internal, private_protected
+dotnet_naming_symbols.enum.required_modifiers = 
+# method
+dotnet_naming_symbols.method.applicable_kinds = method
+dotnet_naming_symbols.method.applicable_accessibilities = public, internal, private, protected, protected_internal, private_protected
+dotnet_naming_symbols.method.required_modifiers = 
+# static_field
+dotnet_naming_symbols.static_field.applicable_kinds = field
+dotnet_naming_symbols.static_field.applicable_accessibilities = public, internal, private, protected, protected_internal, private_protected
+dotnet_naming_symbols.static_field.required_modifiers = static
+# const_field
+dotnet_naming_symbols.const_field.applicable_kinds = field
+dotnet_naming_symbols.const_field.applicable_accessibilities = public, internal, private, protected, protected_internal, private_protected
+dotnet_naming_symbols.const_field.required_modifiers = const
+# public_field
+dotnet_naming_symbols.public_field.applicable_kinds = field
+dotnet_naming_symbols.public_field.applicable_accessibilities = public
+dotnet_naming_symbols.public_field.required_modifiers = 
+# non_public_field
+dotnet_naming_symbols.non_public_field.applicable_kinds = field
+dotnet_naming_symbols.non_public_field.applicable_accessibilities = internal, private, protected, protected_internal, private_protected
+dotnet_naming_symbols.non_public_field.required_modifiers = 
+# static_property
+dotnet_naming_symbols.static_property.applicable_kinds = property
+dotnet_naming_symbols.static_property.applicable_accessibilities = public, internal, private, protected, protected_internal, private_protected
+dotnet_naming_symbols.static_property.required_modifiers = static
+# public_property
+dotnet_naming_symbols.public_property.applicable_kinds = property
+dotnet_naming_symbols.public_property.applicable_accessibilities = public
+dotnet_naming_symbols.public_property.required_modifiers = 
+# non_public_property
+dotnet_naming_symbols.non_public_property.applicable_kinds = property
+dotnet_naming_symbols.non_public_property.applicable_accessibilities = internal, private, protected, protected_internal, private_protected
+dotnet_naming_symbols.non_public_property.required_modifiers = 
+# parameter
+dotnet_naming_symbols.parameter.applicable_kinds = parameter
+dotnet_naming_symbols.parameter.applicable_accessibilities = *
+dotnet_naming_symbols.parameter.required_modifiers = 
+# local
+dotnet_naming_symbols.local.applicable_kinds = local
+dotnet_naming_symbols.local.applicable_accessibilities = *
+dotnet_naming_symbols.local.required_modifiers = 
+
+### 命名スタイル
+# pascal_case : パスカルケース
+dotnet_naming_style.pascal_case.required_prefix = 
+dotnet_naming_style.pascal_case.required_suffix = 
+dotnet_naming_style.pascal_case.word_separator = 
+dotnet_naming_style.pascal_case.capitalization = pascal_case
+# i_and_pascal_case : iから始まるキャメルケース
+dotnet_naming_style.i_and_pascal_case.required_prefix = I
+dotnet_naming_style.i_and_pascal_case.required_suffix = 
+dotnet_naming_style.i_and_pascal_case.word_separator = 
+dotnet_naming_style.i_and_pascal_case.capitalization = pascal_case
+# camel_case : キャメルケース
+dotnet_naming_style.camel_case.required_prefix = 
+dotnet_naming_style.camel_case.required_suffix = 
+dotnet_naming_style.camel_case.word_separator = 
+dotnet_naming_style.camel_case.capitalization = camel_case
+# underscore_and_camel_case : アンダースコアから始まるキャメルケース
+dotnet_naming_style.underscore_and_camel_case.required_prefix = _
+dotnet_naming_style.underscore_and_camel_case.required_suffix = 
+dotnet_naming_style.underscore_and_camel_case.word_separator = 
+dotnet_naming_style.underscore_and_camel_case.capitalization = camel_case
