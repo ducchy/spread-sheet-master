@@ -66,9 +66,34 @@ crashlytics-build.properties
 
 # Packed Addressables
 /[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/*.bin*
+/[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/link.xml*
 
 # Temporary auto-generated Android Assets
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
-.DS_Store
+# User specific
+**/.idea/**/workspace.xml
+**/.idea/**/tasks.xml
+**/.idea/shelf/*
+**/.idea/dictionaries
+**/.idea/httpRequests/
+
+# Sensitive or high-churn files
+**/.idea/**/dataSources/
+**/.idea/**/dataSources.ids
+**/.idea/**/dataSources.xml
+**/.idea/**/dataSources.local.xml
+**/.idea/**/sqlDataSources.xml
+**/.idea/**/dynamic.xml
+
+# Rider
+# Rider auto-generates .iml files, and contentModel.xml
+**/.idea/**/*.iml
+**/.idea/**/contentModel.xml
+**/.idea/**/modules.xml
+**/.idea/**/indexLayout.xml
+**/.idea/**/projectSettingsUpdater.xml
+
+# Visual Studio config
+*.vsconfig
