@@ -14,8 +14,6 @@ namespace SpreadSheetMaster.Editor {
 
 		[SerializeField] private SpreadSheetSettings _settings;
 		[SerializeField] private int _sheetIndex;
-		[SerializeField] private string _overwriteSpreadSheetId;
-		[SerializeField] private string _overwriteSheetId;
 		[SerializeField] private MasterConfigData _editMasterConfig;
 
 		#endregion
@@ -27,17 +25,13 @@ namespace SpreadSheetMaster.Editor {
 
 		private CancellationToken Token => _cts.Token;
 
-		private string SpreadSheetId => !string.IsNullOrEmpty(_overwriteSpreadSheetId)
-			? _overwriteSpreadSheetId
-			: _settings.SpreadSheetId;
+		private string SpreadSheetId => _settings.SpreadSheetId;
 
 		private SheetData SheetData => _settings.GetSheetData(_sheetIndex);
 
-		private string SheetId => !string.IsNullOrEmpty(_overwriteSheetId)
-			? _overwriteSheetId
-			: SheetData != null
-				? SheetData.Id
-				: string.Empty;
+		private string SheetId => SheetData != null
+			? SheetData.Id
+			: string.Empty;
 
 		private string SheetName => SheetData != null ? SheetData.Name : string.Empty;
 		private string SheetMasterName => SheetData != null ? SheetData.MasterName : string.Empty;
@@ -127,10 +121,6 @@ namespace SpreadSheetMaster.Editor {
 					_settings.SheetDataArray.Select(sd => sd.Name).ToArray());
 
 				EditorGUILayout.LabelField("マスタ名", SheetMasterName);
-
-				_overwriteSpreadSheetId =
-					EditorGUILayout.TextField("上書きスプレッドシートID", _overwriteSpreadSheetId);
-				_overwriteSheetId = EditorGUILayout.TextField("上書きシートID", _overwriteSheetId);
 
 				ValidationSheetData();
 
