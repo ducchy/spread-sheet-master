@@ -12,30 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 22c6b752c72b4c8abf27ac204ab2ae79, type: 3}
   m_Name: SpreadSheetSetting.Sample
   m_EditorClassIdentifier: 
-  spreadSheetId: 1JVNBk5FbMS75I-l9ua1e2lbZRry4Q7kvrf7Kfu267bk
-  sheetDataArray:
-  - name: "\u30AD\u30E3\u30E9\u30AF\u30BF\u30FC\u8A73\u7D30"
-    id: 0
-    masterName: CharacterDetail
-  - name: "\u30AD\u30E3\u30E9\u30AF\u30BF\u30FC"
-    id: 1353480984
-    masterName: Character
-  ignoreColumnConditions:
-  - type: 0
-    conditionString: '#'
-  ignoreRowConditions:
-  - type: 1
-    conditionInt: 0
-    conditionString: x
-  findNamespaceNameList:
-  - SpreadSheetMaster.Samples
-  - SpreadSheetMaster.Samples.MyEnums
-  findAssemblyNameList:
+  _spreadSheetId: 1JVNBk5FbMS75I-l9ua1e2lbZRry4Q7kvrf7Kfu267bk
+  _sheetDataArray: []
+  _ignoreColumnConditions: []
+  _ignoreRowConditions: []
+  _findNamespaceNameList: []
+  _findAssemblyNameList:
   - Assembly-CSharp.dll
-  - spread-sheet-master.Samples
-  constantNamingConvention: 1
-  propertyNamingConvention: 1
-  exportNamespaceName: SpreadSheetMaster.Samples
-  exportScriptDirectoryPath: Assets/
-  exportCsvDirectoryPath: Assets/
-  logLevel: 0
+  _constantNamingConvention: 1
+  _propertyNamingConvention: 1
+  _columnNameNamingConvention: 2
+  _exportNamespaceName: 
+  _exportScriptDirectoryPath: Assets/
+  _exportCsvDirectoryPath: Assets/
+  _logLevel: 0

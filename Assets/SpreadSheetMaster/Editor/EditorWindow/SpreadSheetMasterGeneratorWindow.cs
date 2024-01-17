@@ -25,20 +25,11 @@ namespace SpreadSheetMaster.Editor {
 
 		private CancellationToken Token => _cts.Token;
 
-		private string SpreadSheetId => _settings.SpreadSheetId;
-
-		private SheetData SheetData => _settings.GetSheetData(_sheetIndex);
-
-		private string SheetId => SheetData != null
-			? SheetData.Id
-			: string.Empty;
-
-		private string SheetName => SheetData != null ? SheetData.Name : string.Empty;
-		private string SheetMasterName => SheetData != null ? SheetData.MasterName : string.Empty;
-
 		private string ExportNamespaceName => _settings.ExportNamespaceName;
 		private string ExportScriptDirectoryPath => _settings.ExportScriptDirectoryPath;
 		private string ExportCsvDirectoryPath => _settings.ExportCsvDirectoryPath;
+
+		private SheetData _sheetData;
 
 		private bool _downloadingFlag;
 		private bool _batchDownloadingFlag;
@@ -63,28 +54,26 @@ namespace SpreadSheetMaster.Editor {
 			EditorGUILayout.Space();
 
 			using (new EditorGUI.DisabledScope(_downloadingFlag || _batchDownloadingFlag)) {
-				// インポート設定
-				DrawImportSetting();
+				// 設定データアセットのシリアライズフィールド
+				DrawSettingsDataAssetSerializeField();
 
-				if (_settings == null) {
-					EditorGUILayout.HelpBox("シート設定を設定してください", MessageType.Warning);
-				} else {
-					// シートのダウンロード
-					DrawDownloadSheet();
+				// ルート情報読み込み
+				EditorGUILayout.Space();
 
-					EditorGUILayout.Space();
+				// シート読み込み
+				DrawDownloadSheet();
+				EditorGUILayout.Space();
 
-					// マスタ構成の編集
-					DrawEditMasterConfig();
+				// マスタ構成の編集
+				DrawEditMasterConfig();
+				EditorGUILayout.Space();
 
-					EditorGUILayout.Space();
+				// マスタスクリプト生成
+				DrawGenerateMasterScript();
+				EditorGUILayout.Space();
 
-					// マスタスクリプト生成
-					DrawGenerateMasterScript();
-
-					// csv生成
-					DrawGenerateCsvScript();
-				}
+				// csv生成
+				DrawGenerateCsvScript();
 			}
 
 			GUILayout.FlexibleSpace();
@@ -102,11 +91,12 @@ namespace SpreadSheetMaster.Editor {
 			window.Focus();
 		}
 
-		private void DrawImportSetting() {
-			EditorGUILayout.LabelField("シート設定", EditorStyles.boldLabel);
+		/// <summary> 設定データアセットのシリアライズフィールド描画 </summary>
+		private void DrawSettingsDataAssetSerializeField() {
+			EditorGUILayout.LabelField("使用する設定データ", EditorStyles.boldLabel);
 
 			using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox)) {
-				Undo.RecordObject(this, "Modify ImportSetting");
+				Undo.RecordObject(this, "Modify Settings Data Asset");
 				_settings = (SpreadSheetSettings)EditorGUILayout.ObjectField(_settings, typeof(SpreadSheetSettings), false);
 			}
 		}
@@ -115,52 +105,50 @@ namespace SpreadSheetMaster.Editor {
 			EditorGUILayout.LabelField("シートのダウンロード", EditorStyles.boldLabel);
 
 			using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox)) {
-				Undo.RecordObject(this, "Modify SpreadSheetId or SheetName");
-
-				_sheetIndex = EditorGUILayout.Popup("シート", _sheetIndex,
-					_settings.SheetDataArray.Select(sd => sd.Name).ToArray());
-
-				EditorGUILayout.LabelField("マスタ名", SheetMasterName);
-
-				ValidationSheetData();
-
-				if (!string.IsNullOrEmpty(_downloadSheetWarning)) {
+				// バリデーション
+				ValidationDownloadSheet();
+				var downloadSheetValidFlag = string.IsNullOrEmpty(_downloadSheetWarning);
+				if (!downloadSheetValidFlag) {
 					EditorGUILayout.HelpBox(_downloadSheetWarning, MessageType.Warning);
+					return;
 				}
 
-				using (new EditorGUI.DisabledScope(!string.IsNullOrEmpty(_downloadSheetWarning))) {
-					if (GUILayout.Button("ダウンロード")) {
-						_downloadingFlag = true;
-						_downloadText = "ダウンロード中...";
+				Undo.RecordObject(this, "Modify SpreadSheetId or SheetName");
 
-						_editMasterConfig = null;
-						_downloadText = string.Empty;
-						_downloadSheetError = string.Empty;
-						EditorGUIUtility.editingTextField = false;
+				// シート選択プルダウン
+				var sheetIndexOptions = _settings.SheetDataArray.Select(sd => sd.Name).ToArray();
+				_sheetIndex = EditorGUILayout.Popup("シート", _sheetIndex, sheetIndexOptions);
+				_sheetData = _settings.GetSheetData(_sheetIndex);
 
-						DownloadSheetAsync(Token);
-					}
+				if (GUILayout.Button("ダウンロード")) {
+					_downloadingFlag = true;
+					_downloadText = "ダウンロード中...";
 
-					if (GUILayout.Button("ブラウザで開く")) {
-						Application.OpenURL(_sheetUrlBuilder.BuildEditUrl(SpreadSheetId, SheetId));
-					}
+					_editMasterConfig = null;
+					_downloadText = string.Empty;
+					_downloadSheetError = string.Empty;
+					EditorGUIUtility.editingTextField = false;
+
+					DownloadSheetAsync(Token);
+				}
+
+				if (GUILayout.Button("ブラウザで開く")) {
+					var url = _sheetUrlBuilder.BuildEditUrl(_settings.SpreadSheetId, _sheetData.Id);
+					Application.OpenURL(url);
 				}
 
 				if (!string.IsNullOrEmpty(_downloadSheetError)) {
 					EditorGUILayout.HelpBox(_downloadSheetError, MessageType.Error);
 				}
 
-				using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox,
-					       GUILayout.Height(120))) {
-					using (var scroll =
-					       new EditorGUILayout.ScrollViewScope(_scrollPositionCsvPreview)) {
+				using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox, GUILayout.Height(120))) {
+					using (var scroll = new EditorGUILayout.ScrollViewScope(_scrollPositionCsvPreview)) {
 						_scrollPositionCsvPreview = scroll.scrollPosition;
 						using (new EditorGUI.DisabledScope(true)) {
-							EditorGUILayout.TextArea(
-								_downloadText == string.Empty
-									? "ダウンロードしたシートの内容が表示されます"
-									: _downloadText,
-								GUILayout.MinHeight(110));
+							var text = _downloadText == string.Empty
+								? "ダウンロードしたシートの内容が表示されます"
+								: _downloadText;
+							EditorGUILayout.TextArea(text, GUILayout.MinHeight(110));
 						}
 					}
 				}
@@ -292,7 +280,7 @@ namespace SpreadSheetMaster.Editor {
 				}
 
 				if (GUILayout.Button("一括生成")) {
-					DownloadAndExportScriptAllAsync(SpreadSheetId, Token);
+					DownloadAndExportScriptAllAsync(_settings.SpreadSheetId, Token);
 				}
 			}
 		}
@@ -321,21 +309,18 @@ namespace SpreadSheetMaster.Editor {
 				}
 
 				if (GUILayout.Button("一括生成")) {
-					DownloadAndExportCsvAllAsync(SpreadSheetId, Token);
+					DownloadAndExportCsvAllAsync(_settings.SpreadSheetId, Token);
 				}
 			}
 		}
 
 		private async void DownloadSheetAsync(CancellationToken token) {
-			await DownloadSheetAsync(SpreadSheetId, SheetId, SheetName, SheetMasterName, token);
+			await DownloadSheetAsyncInternal(_settings.SpreadSheetId, _sheetData, token);
 		}
 
-		private async Task DownloadSheetAsync(string spreadSheetId, string sheetId,
-			string sheetName,
-			string sheetMasterName,
-			CancellationToken token) {
+		private async Task DownloadSheetAsyncInternal(string spreadSheetId, SheetData sheetData, CancellationToken token) {
 			var downloader = new SheetDownloader();
-			var downloadSheetAsync = downloader.DownloadSheetAsync(spreadSheetId, sheetId, token);
+			var downloadSheetAsync = downloader.DownloadSheetAsync(spreadSheetId, sheetData.Id, token);
 
 			while (!downloadSheetAsync.IsDone) {
 				await Task.Yield();
@@ -346,13 +331,12 @@ namespace SpreadSheetMaster.Editor {
 				return;
 			}
 
-			OnDownloadSuccess(downloadSheetAsync.Result, sheetName, sheetMasterName);
+			OnDownloadSuccess(downloadSheetAsync.Result, sheetData);
 		}
 
-		private void OnDownloadSuccess(string response, string sheetName,
-			string sheetMasterName) {
+		private void OnDownloadSuccess(string response, SheetData sheetData) {
 			_downloadText = response;
-			_editMasterConfig = ParseCsvToConfig(_downloadText, sheetName, sheetMasterName);
+			_editMasterConfig = ParseCsvToConfig(_downloadText, sheetData.Name, sheetData.MasterName);
 			_downloadingFlag = false;
 		}
 
@@ -361,24 +345,38 @@ namespace SpreadSheetMaster.Editor {
 			_downloadingFlag = false;
 		}
 
-		private void ValidationSheetData() {
+		private void ValidationDownloadSheet() {
+			if (_settings == null) {
+				_downloadSheetWarning = "\"使用する設定データ\"が未設定";
+				return;
+			}
+
+			if (string.IsNullOrEmpty(_settings.SpreadSheetId)) {
+				_downloadSheetWarning = "スプレッドシートIDが未設定";
+				return;
+			}
+
+			if (_sheetData == null) {
+				_downloadSheetWarning = "シート情報が未設定";
+				return;
+			}
+
+			if (string.IsNullOrEmpty(_sheetData.Id)) {
+				_downloadSheetWarning = "シートIDが未設定";
+				return;
+			}
+
+			if (string.IsNullOrEmpty(_sheetData.Name)) {
+				_downloadSheetWarning = "シート名が未設定";
+				return;
+			}
+
+			if (string.IsNullOrEmpty(_sheetData.MasterName)) {
+				_downloadSheetWarning = "マスタ名が未設定";
+				return;
+			}
+
 			_downloadSheetWarning = string.Empty;
-
-			if (string.IsNullOrEmpty(SpreadSheetId)) {
-				_downloadSheetWarning = "スプレッドシートID を入力してください";
-			}
-
-			if (string.IsNullOrEmpty(SheetId)) {
-				_downloadSheetWarning = "シートID を入力してください";
-			}
-
-			if (string.IsNullOrEmpty(SheetName)) {
-				_downloadSheetWarning = "シート名 を入力してください";
-			}
-
-			if (string.IsNullOrEmpty(SheetMasterName)) {
-				_downloadSheetWarning = "マスタ名 を入力してください";
-			}
 		}
 
 		private MasterConfigData ParseCsvToConfig(
@@ -553,14 +551,12 @@ namespace SpreadSheetMaster.Editor {
 			File.WriteAllText(exportPath, contents);
 		}
 
-		private async void DownloadAndExportScriptAllAsync(string spreadSheetId,
-			CancellationToken token) {
+		private async void DownloadAndExportScriptAllAsync(string spreadSheetId, CancellationToken token) {
 			_batchDownloadingFlag = true;
 
 			var sheetDataList = _settings.SheetDataArray;
 			foreach (var sheetData in sheetDataList) {
-				await DownloadSheetAsync(spreadSheetId, sheetData.Id, sheetData.Name,
-					sheetData.MasterName, token);
+				await DownloadSheetAsyncInternal(spreadSheetId, sheetData, token);
 
 				ValidationGenerateScript();
 				if (!string.IsNullOrEmpty(_generateScriptWarning)) {
@@ -605,14 +601,12 @@ namespace SpreadSheetMaster.Editor {
 			}
 		}
 
-		private async void DownloadAndExportCsvAllAsync(string spreadSheetId,
-			CancellationToken token) {
+		private async void DownloadAndExportCsvAllAsync(string spreadSheetId, CancellationToken token) {
 			_batchDownloadingFlag = true;
 
 			var sheetDataList = _settings.SheetDataArray;
 			foreach (var sheetData in sheetDataList) {
-				await DownloadSheetAsync(spreadSheetId, sheetData.Id, sheetData.Name,
-					sheetData.MasterName, token);
+				await DownloadSheetAsyncInternal(spreadSheetId, sheetData, token);
 
 				ValidationGenerateCsv();
 				if (!string.IsNullOrEmpty(_generateCsvWarning)) {
