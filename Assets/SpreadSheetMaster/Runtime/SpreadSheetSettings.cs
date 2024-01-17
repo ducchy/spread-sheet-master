@@ -56,7 +56,8 @@ namespace SpreadSheetMaster {
 	public class SpreadSheetSettings : ScriptableObject {
 		#region Serialize Fields
 
-		[Header("シート設定")] [SerializeField] private string _spreadSheetId;
+		[Header("シート設定")] [SerializeField] private string _rootInfoSpreadSheetId;
+		[SerializeField] private string _spreadSheetId;
 		[SerializeField] private SheetData[] _sheetDataArray;
 		[SerializeField] private IgnoreColumnCondition[] _ignoreColumnConditions;
 		[SerializeField] private IgnoreRowCondition[] _ignoreRowConditions;
@@ -77,6 +78,7 @@ namespace SpreadSheetMaster {
 
 		#region Variables
 
+		public string RootInfoSpreadSheetId => _rootInfoSpreadSheetId;
 		public string SpreadSheetId => _spreadSheetId;
 		public SheetData[] SheetDataArray => _sheetDataArray;
 		public IgnoreColumnCondition[] IgnoreColumnConditions => _ignoreColumnConditions;

@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace SpreadSheetMaster.Editor {
 	/// <summary> スプレッドシートマスタ生成ウィンドウ </summary>
-	public class SpreadSheetMasterGeneratorWindow : EditorWindow {
+	public partial class SpreadSheetMasterGeneratorWindow : EditorWindow {
 		#region Serialize Fields
 
 		[SerializeField] private SpreadSheetSettings _settings;
@@ -20,26 +20,17 @@ namespace SpreadSheetMaster.Editor {
 
 		#region Variables
 
-		private readonly SheetUrlBuilder _sheetUrlBuilder = new();
 		private readonly CancellationTokenSource _cts = new();
 
+		private bool DownloadedContentFlag => !string.IsNullOrEmpty(_downloadContent);
 		private CancellationToken Token => _cts.Token;
-
-		private string ExportNamespaceName => _settings.ExportNamespaceName;
-		private string ExportScriptDirectoryPath => _settings.ExportScriptDirectoryPath;
-		private string ExportCsvDirectoryPath => _settings.ExportCsvDirectoryPath;
 
 		private SheetData _sheetData;
 
 		private bool _downloadingFlag;
 		private bool _batchDownloadingFlag;
-		private string _downloadText;
-		private string _downloadSheetWarning;
+		private string _downloadContent;
 		private string _downloadSheetError;
-		private string _generateScriptWarning;
-		private string _generateCsvWarning;
-		private Vector2 _scrollPositionCsvPreview;
-		private Vector2 _scrollPositionColumns;
 
 		#endregion
 
@@ -54,26 +45,33 @@ namespace SpreadSheetMaster.Editor {
 			EditorGUILayout.Space();
 
 			using (new EditorGUI.DisabledScope(_downloadingFlag || _batchDownloadingFlag)) {
-				// 設定データアセットのシリアライズフィールド
-				DrawSettingsDataAssetSerializeField();
+				// 設定データ選択
+				DrawSectionSelectSettings();
+
+				EditorGUILayout.Space();
 
 				// ルート情報読み込み
+				DrawDownloadRootInfo();
+
 				EditorGUILayout.Space();
 
 				// シート読み込み
 				DrawDownloadSheet();
+
 				EditorGUILayout.Space();
 
 				// マスタ構成の編集
-				DrawEditMasterConfig();
+				DrawSectionEditMasterConfig();
+
 				EditorGUILayout.Space();
 
 				// マスタスクリプト生成
-				DrawGenerateMasterScript();
+				DrawSectionGenerateScript();
+
 				EditorGUILayout.Space();
 
 				// csv生成
-				DrawGenerateCsvScript();
+				DrawSectionGenerateCsv();
 			}
 
 			GUILayout.FlexibleSpace();
@@ -91,226 +89,38 @@ namespace SpreadSheetMaster.Editor {
 			window.Focus();
 		}
 
-		/// <summary> 設定データアセットのシリアライズフィールド描画 </summary>
-		private void DrawSettingsDataAssetSerializeField() {
-			EditorGUILayout.LabelField("使用する設定データ", EditorStyles.boldLabel);
+		/// <summary> シートのダウンロード </summary>
+		private void DownloadSheet() {
+			_downloadingFlag = true;
+			_editMasterConfig = null;
+			_downloadContent = string.Empty;
+			_downloadSheetError = string.Empty;
+			EditorGUIUtility.editingTextField = false;
 
-			using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox)) {
-				Undo.RecordObject(this, "Modify Settings Data Asset");
-				_settings = (SpreadSheetSettings)EditorGUILayout.ObjectField(_settings, typeof(SpreadSheetSettings), false);
-			}
+			DownloadSheetAsync(Token);
 		}
 
-		private void DrawDownloadSheet() {
-			EditorGUILayout.LabelField("シートのダウンロード", EditorStyles.boldLabel);
-
-			using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox)) {
-				// バリデーション
-				ValidationDownloadSheet();
-				var downloadSheetValidFlag = string.IsNullOrEmpty(_downloadSheetWarning);
-				if (!downloadSheetValidFlag) {
-					EditorGUILayout.HelpBox(_downloadSheetWarning, MessageType.Warning);
-					return;
-				}
-
-				Undo.RecordObject(this, "Modify SpreadSheetId or SheetName");
-
-				// シート選択プルダウン
-				var sheetIndexOptions = _settings.SheetDataArray.Select(sd => sd.Name).ToArray();
-				_sheetIndex = EditorGUILayout.Popup("シート", _sheetIndex, sheetIndexOptions);
-				_sheetData = _settings.GetSheetData(_sheetIndex);
-
-				if (GUILayout.Button("ダウンロード")) {
-					_downloadingFlag = true;
-					_downloadText = "ダウンロード中...";
-
-					_editMasterConfig = null;
-					_downloadText = string.Empty;
-					_downloadSheetError = string.Empty;
-					EditorGUIUtility.editingTextField = false;
-
-					DownloadSheetAsync(Token);
-				}
-
-				if (GUILayout.Button("ブラウザで開く")) {
-					var url = _sheetUrlBuilder.BuildEditUrl(_settings.SpreadSheetId, _sheetData.Id);
-					Application.OpenURL(url);
-				}
-
-				if (!string.IsNullOrEmpty(_downloadSheetError)) {
-					EditorGUILayout.HelpBox(_downloadSheetError, MessageType.Error);
-				}
-
-				using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox, GUILayout.Height(120))) {
-					using (var scroll = new EditorGUILayout.ScrollViewScope(_scrollPositionCsvPreview)) {
-						_scrollPositionCsvPreview = scroll.scrollPosition;
-						using (new EditorGUI.DisabledScope(true)) {
-							var text = _downloadText == string.Empty
-								? "ダウンロードしたシートの内容が表示されます"
-								: _downloadText;
-							EditorGUILayout.TextArea(text, GUILayout.MinHeight(110));
-						}
-					}
-				}
-
-				using (new EditorGUI.DisabledScope(_downloadText == string.Empty)) {
-					if (GUILayout.Button("クリア")) {
-						_editMasterConfig = null;
-						_downloadText = string.Empty;
-						_downloadSheetError = string.Empty;
-						EditorGUIUtility.editingTextField = false;
-					}
-				}
-			}
+		/// <summary> シートのURLを開く </summary>
+		private void OpenSheetUrl() {
+			var urlBuilder = new SheetUrlBuilder();
+			var url = urlBuilder.BuildEditUrl(_settings.SpreadSheetId, _sheetData.Id);
+			Application.OpenURL(url);
 		}
 
-		private void DrawEditMasterConfig() {
-			EditorGUILayout.LabelField("マスタ構成の編集", EditorStyles.boldLabel);
-
-			using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox)) {
-				if (string.IsNullOrEmpty(_downloadText)) {
-					EditorGUILayout.LabelField("シートをダウンロードしてください");
-					return;
-				}
-
-				using (new EditorGUILayout.HorizontalScope()) {
-					EditorGUILayout.LabelField("マスタ名", GUILayout.MaxWidth(80));
-					EditorGUILayout.TextField(_editMasterConfig._masterName);
-				}
-
-				using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox)) {
-					using (new EditorGUILayout.HorizontalScope()) {
-						EditorGUILayout.LabelField("", EditorStyles.boldLabel,
-							GUILayout.MaxWidth(20));
-						EditorGUILayout.LabelField("使用", EditorStyles.boldLabel,
-							GUILayout.MaxWidth(40));
-						EditorGUILayout.LabelField("カラム名", EditorStyles.boldLabel,
-							GUILayout.MaxWidth(200));
-						EditorGUILayout.LabelField("データ型", EditorStyles.boldLabel,
-							GUILayout.MaxWidth(80));
-						EditorGUILayout.LabelField("Enum名", EditorStyles.boldLabel,
-							GUILayout.MaxWidth(280));
-
-						GUILayout.FlexibleSpace();
-					}
-
-					EditorGUILayout.Space();
-
-					if (_editMasterConfig._columns == null || _editMasterConfig._columns.Length == 0) {
-						EditorGUILayout.LabelField("カラムの取得に失敗");
-						return;
-					}
-
-					Undo.RecordObject(this, "Modify Config Columns");
-					using (var scroll = new EditorGUILayout.ScrollViewScope(_scrollPositionColumns)) {
-						_scrollPositionColumns = scroll.scrollPosition;
-
-						for (var i = 0; i < _editMasterConfig._columns.Length; ++i) {
-							var column = _editMasterConfig._columns[i];
-
-							if (string.IsNullOrWhiteSpace(column._propertyName)) {
-								continue;
-							}
-
-							using (new EditorGUILayout.HorizontalScope()) {
-								EditorGUILayout.LabelField(column._validFlag ? "○" : "×",
-									GUILayout.MaxWidth(20));
-								column._exportFlag = EditorGUILayout.Toggle(column._exportFlag,
-									GUILayout.MaxWidth(40));
-								EditorGUILayout.LabelField(column._propertyName,
-									GUILayout.MaxWidth(200));
-								var dataType =
-									(DataType)EditorGUILayout.EnumPopup(column._type,
-										GUILayout.MaxWidth(80));
-
-								using (new EditorGUI.DisabledScope(column._type != DataType.Enum)) {
-									column._enumTypeName =
-										EditorGUILayout.TextField(column._enumTypeName,
-											GUILayout.MaxWidth(240));
-
-									if (GUILayout.Button("適用", GUILayout.MaxWidth(40))) {
-										var type = FindEnumType(column._enumTypeName);
-										column._validFlag = type != null;
-										column.EnumType = type;
-										column._enumTypeName = type?.Name;
-									}
-								}
-
-								GUILayout.FlexibleSpace();
-
-								if (column._type != dataType) {
-									column._type = dataType;
-									if (dataType == DataType.Enum) {
-										column._validFlag = false;
-									} else {
-										column._validFlag = true;
-										column.EnumType = null;
-										column._enumTypeName = string.Empty;
-									}
-								}
-							}
-						}
-					}
-				}
-			}
+		/// <summary> 警告描画 </summary>
+		private void DrawWarning(string message) {
+			EditorGUILayout.HelpBox(message, MessageType.Warning);
 		}
 
-		private void DrawGenerateMasterScript() {
-			EditorGUILayout.LabelField("マスタスクリプト生成", EditorStyles.boldLabel);
-
-			using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox)) {
-				if (string.IsNullOrEmpty(_downloadText)) {
-					EditorGUILayout.LabelField("シートをダウンロードしてください");
-					return;
-				}
-
-				EditorGUILayout.LabelField("生成先フォルダ", ExportScriptDirectoryPath);
-				EditorGUILayout.LabelField("名前空間", ExportNamespaceName);
-
-				ValidationGenerateScript();
-
-				if (!string.IsNullOrEmpty(_generateScriptWarning)) {
-					EditorGUILayout.HelpBox(_generateScriptWarning, MessageType.Warning);
-				}
-
-				using (new EditorGUI.DisabledScope(!string.IsNullOrEmpty(_generateScriptWarning))) {
-					if (GUILayout.Button("生成")) {
-						GenerateMasterAndMasterDataScript(_editMasterConfig, true);
-					}
-				}
-
-				if (GUILayout.Button("一括生成")) {
-					DownloadAndExportScriptAllAsync(_settings.SpreadSheetId, Token);
-				}
-			}
+		/// <summary> セクションヘッダー描画 </summary>
+		private void DrawSectionHeader(string text) {
+			EditorGUILayout.LabelField(text, EditorStyles.boldLabel);
 		}
 
-		private void DrawGenerateCsvScript() {
-			EditorGUILayout.LabelField("csv生成", EditorStyles.boldLabel);
-
+		/// <summary> セクション内容描画 </summary>
+		private void DrawSectionContent(Action onDraw) {
 			using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox)) {
-				if (string.IsNullOrEmpty(_downloadText)) {
-					EditorGUILayout.LabelField("シートをダウンロードしてください");
-					return;
-				}
-
-				EditorGUILayout.LabelField("生成先フォルダ", ExportCsvDirectoryPath);
-
-				ValidationGenerateCsv();
-
-				if (!string.IsNullOrEmpty(_generateCsvWarning)) {
-					EditorGUILayout.HelpBox(_generateCsvWarning, MessageType.Warning);
-				}
-
-				using (new EditorGUI.DisabledScope(!string.IsNullOrEmpty(_generateCsvWarning))) {
-					if (GUILayout.Button("生成")) {
-						GenerateMasterCsv(_editMasterConfig, true);
-					}
-				}
-
-				if (GUILayout.Button("一括生成")) {
-					DownloadAndExportCsvAllAsync(_settings.SpreadSheetId, Token);
-				}
+				onDraw?.Invoke();
 			}
 		}
 
@@ -335,48 +145,14 @@ namespace SpreadSheetMaster.Editor {
 		}
 
 		private void OnDownloadSuccess(string response, SheetData sheetData) {
-			_downloadText = response;
-			_editMasterConfig = ParseCsvToConfig(_downloadText, sheetData.Name, sheetData.MasterName);
+			_downloadContent = response;
+			_editMasterConfig = ParseCsvToConfig(_downloadContent, sheetData.Name, sheetData.MasterName);
 			_downloadingFlag = false;
 		}
 
 		private void OnDownloadError(string error) {
 			_downloadSheetError = error;
 			_downloadingFlag = false;
-		}
-
-		private void ValidationDownloadSheet() {
-			if (_settings == null) {
-				_downloadSheetWarning = "\"使用する設定データ\"が未設定";
-				return;
-			}
-
-			if (string.IsNullOrEmpty(_settings.SpreadSheetId)) {
-				_downloadSheetWarning = "スプレッドシートIDが未設定";
-				return;
-			}
-
-			if (_sheetData == null) {
-				_downloadSheetWarning = "シート情報が未設定";
-				return;
-			}
-
-			if (string.IsNullOrEmpty(_sheetData.Id)) {
-				_downloadSheetWarning = "シートIDが未設定";
-				return;
-			}
-
-			if (string.IsNullOrEmpty(_sheetData.Name)) {
-				_downloadSheetWarning = "シート名が未設定";
-				return;
-			}
-
-			if (string.IsNullOrEmpty(_sheetData.MasterName)) {
-				_downloadSheetWarning = "マスタ名が未設定";
-				return;
-			}
-
-			_downloadSheetWarning = string.Empty;
 		}
 
 		private MasterConfigData ParseCsvToConfig(
@@ -396,7 +172,7 @@ namespace SpreadSheetMaster.Editor {
 			var config = new MasterConfigData {
 				_masterName = StringUtility.SnakeToUpperCamel(masterName + "Master"),
 				_sheetName = sheetName,
-				_exportNamespaceName = ExportNamespaceName,
+				_exportNamespaceName = _settings.ExportNamespaceName,
 			};
 
 			if (records == null || records.Count == 0) {
@@ -496,35 +272,13 @@ namespace SpreadSheetMaster.Editor {
 			return null;
 		}
 
-		private void ValidationGenerateScript() {
-			_generateScriptWarning = string.Empty;
-			if (_editMasterConfig._idMasterColumnConfigData == null) {
-				_generateScriptWarning = "\"id\"カラムを設定してください。";
-				return;
-			}
-
-			if (ExportScriptDirectoryPath.IndexOf("Assets/", StringComparison.Ordinal) != 0) {
-				_generateScriptWarning = "生成先フォルダは \"Assets/\"から始まるパスを指定してください。";
-				return;
-			}
-
-			if (StringUtility.IsExistInvalidPathChars(ExportScriptDirectoryPath)) {
-				_generateScriptWarning = "生成先フォルダのパスに使用できない文字が含まれています。";
-				return;
-			}
-
-			var fileName = $"{_editMasterConfig._masterName}.cs";
-			if (StringUtility.IsExistInvalidFileNameChars(fileName)) {
-				_generateScriptWarning = "ファイル名に使用できない文字が含まれています。";
-			}
-		}
-
 		private void GenerateMasterAndMasterDataScript(MasterConfigData configData,
 			bool withRefresh) {
-			CreateDirectoryIfNeeded(ExportScriptDirectoryPath);
+			var exportScriptDirectoryPath = _settings.ExportScriptDirectoryPath;
+			CreateDirectoryIfNeeded(exportScriptDirectoryPath);
 
-			GenerateMasterScript(ExportScriptDirectoryPath, configData);
-			GenerateMasterDataScript(ExportScriptDirectoryPath, configData);
+			GenerateMasterScript(exportScriptDirectoryPath, configData);
+			GenerateMasterDataScript(exportScriptDirectoryPath, configData);
 
 			if (withRefresh) {
 				AssetDatabase.Refresh();
@@ -557,12 +311,6 @@ namespace SpreadSheetMaster.Editor {
 			var sheetDataList = _settings.SheetDataArray;
 			foreach (var sheetData in sheetDataList) {
 				await DownloadSheetAsyncInternal(spreadSheetId, sheetData, token);
-
-				ValidationGenerateScript();
-				if (!string.IsNullOrEmpty(_generateScriptWarning)) {
-					continue;
-				}
-
 				GenerateMasterAndMasterDataScript(_editMasterConfig, false);
 			}
 
@@ -571,30 +319,11 @@ namespace SpreadSheetMaster.Editor {
 			_batchDownloadingFlag = false;
 		}
 
-		private void ValidationGenerateCsv() {
-			_generateCsvWarning = string.Empty;
-
-			if (ExportCsvDirectoryPath.IndexOf("Assets/", StringComparison.Ordinal) != 0) {
-				_generateCsvWarning = "生成先フォルダは \"Assets/\"から始まるパスを指定してください。";
-				return;
-			}
-
-			if (StringUtility.IsExistInvalidPathChars(ExportCsvDirectoryPath)) {
-				_generateCsvWarning = "生成先フォルダのパスに使用できない文字が含まれています。";
-				return;
-			}
-
-			var fileName = $"{_editMasterConfig._masterName}.csv";
-			if (StringUtility.IsExistInvalidFileNameChars(fileName)) {
-				_generateCsvWarning = "ファイル名に使用できない文字が含まれています。";
-			}
-		}
-
 		private void GenerateMasterCsv(MasterConfigData configData, bool withRefresh) {
-			CreateDirectoryIfNeeded(ExportCsvDirectoryPath);
+			CreateDirectoryIfNeeded(_settings.ExportCsvDirectoryPath);
 
-			var exportPath = $"{ExportCsvDirectoryPath}/{configData._masterName}.csv";
-			File.WriteAllText(exportPath, _downloadText);
+			var exportPath = $"{_settings.ExportCsvDirectoryPath}/{configData._masterName}.csv";
+			File.WriteAllText(exportPath, _downloadContent);
 
 			if (withRefresh) {
 				AssetDatabase.Refresh();
@@ -607,12 +336,6 @@ namespace SpreadSheetMaster.Editor {
 			var sheetDataList = _settings.SheetDataArray;
 			foreach (var sheetData in sheetDataList) {
 				await DownloadSheetAsyncInternal(spreadSheetId, sheetData, token);
-
-				ValidationGenerateCsv();
-				if (!string.IsNullOrEmpty(_generateCsvWarning)) {
-					continue;
-				}
-
 				GenerateMasterCsv(_editMasterConfig, false);
 			}
 
