@@ -53,29 +53,25 @@ namespace SpreadSheetMaster {
 
 	/// <summary> スプレッドシート設定 </summary>
 	[CreateAssetMenu(fileName = "SpreadSheetSetting", menuName = "SpreadSheetMaster/ImportSetting")]
-	public class SpreadSheetSetting : ScriptableObject {
+	public class SpreadSheetSettings : ScriptableObject {
 		#region Serialize Fields
 
-		[Header("シート設定")]
-		[SerializeField] private string _spreadSheetId;
+		[Header("シート設定")] [SerializeField] private string _spreadSheetId;
 		[SerializeField] private SheetData[] _sheetDataArray;
 		[SerializeField] private IgnoreColumnCondition[] _ignoreColumnConditions;
 		[SerializeField] private IgnoreRowCondition[] _ignoreRowConditions;
 
-		[Header("コード設定")]
-		[SerializeField] private string[] _findNamespaceNameList;
+		[Header("コード設定")] [SerializeField] private string[] _findNamespaceNameList;
 		[SerializeField] private string[] _findAssemblyNameList = { "Assembly-CSharp.dll", };
 		[SerializeField] private NamingConvention _constantNamingConvention = NamingConvention.UpperCamelCase;
 		[SerializeField] private NamingConvention _propertyNamingConvention = NamingConvention.UpperCamelCase;
 		[SerializeField] private NamingConvention _columnNameNamingConvention = NamingConvention.SnakeCase;
 
-		[Header("出力設定")]
-		[SerializeField] private string _exportNamespaceName = string.Empty;
+		[Header("出力設定")] [SerializeField] private string _exportNamespaceName = string.Empty;
 		[SerializeField] private string _exportScriptDirectoryPath = "Assets/";
 		[SerializeField] private string _exportCsvDirectoryPath = "Assets/";
 
-		[Header("デバッグ設定")]
-		[SerializeField] private LogLevel _logLevel = LogLevel.Log;
+		[Header("デバッグ設定")] [SerializeField] private LogLevel _logLevel = LogLevel.Log;
 
 		#endregion
 

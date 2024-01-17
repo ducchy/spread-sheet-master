@@ -17,7 +17,7 @@ namespace SpreadSheetMaster.Samples {
 	public class Sample : MonoBehaviour {
 		#region Serialize Fields
 
-		[SerializeField] private SpreadSheetSetting _setting;
+		[SerializeField] private SpreadSheetSettings _settings;
 
 		#endregion
 
@@ -35,8 +35,8 @@ namespace SpreadSheetMaster.Samples {
 
 		/// <summary> 開始 </summary>
 		private async void Start() {
-			var parser = new CsvParser(_setting.IgnoreRowConditions);
-			_importer = new SpreadSheetMasterImporter(parser, _setting.LogLevel);
+			var parser = new CsvParser(_settings.IgnoreRowConditions);
+			_importer = new SpreadSheetMasterImporter(parser, _settings.LogLevel);
 
 			var token = _cts.Token;
 			await ImportMasterAllAsync(token);
@@ -50,7 +50,7 @@ namespace SpreadSheetMaster.Samples {
 		private async UniTask ImportMasterAllAsync(CancellationToken token) {
 			Debug.Log("[ImportMasterAllAsync] 開始");
 
-			await ImportMasterAsync(_setting.SpreadSheetId, _setting.SheetDataArray, token);
+			await ImportMasterAsync(_settings.SpreadSheetId, _settings.SheetDataArray, token);
 
 			Debug.Log("[ImportMasterAllAsync] 終了");
 		}

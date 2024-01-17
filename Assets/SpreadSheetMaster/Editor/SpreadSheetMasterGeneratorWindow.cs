@@ -12,7 +12,7 @@ namespace SpreadSheetMaster.Editor {
 	public class SpreadSheetMasterGeneratorWindow : EditorWindow {
 		#region Serialize Fields
 
-		[SerializeField] private SpreadSheetSetting _setting;
+		[SerializeField] private SpreadSheetSettings _settings;
 		[SerializeField] private int _sheetIndex;
 		[SerializeField] private string _overwriteSpreadSheetId;
 		[SerializeField] private string _overwriteSheetId;
@@ -29,9 +29,9 @@ namespace SpreadSheetMaster.Editor {
 
 		private string SpreadSheetId => !string.IsNullOrEmpty(_overwriteSpreadSheetId)
 			? _overwriteSpreadSheetId
-			: _setting.SpreadSheetId;
+			: _settings.SpreadSheetId;
 
-		private SheetData SheetData => _setting.GetSheetData(_sheetIndex);
+		private SheetData SheetData => _settings.GetSheetData(_sheetIndex);
 
 		private string SheetId => !string.IsNullOrEmpty(_overwriteSheetId)
 			? _overwriteSheetId
@@ -42,9 +42,9 @@ namespace SpreadSheetMaster.Editor {
 		private string SheetName => SheetData != null ? SheetData.Name : string.Empty;
 		private string SheetMasterName => SheetData != null ? SheetData.MasterName : string.Empty;
 
-		private string ExportNamespaceName => _setting.ExportNamespaceName;
-		private string ExportScriptDirectoryPath => _setting.ExportScriptDirectoryPath;
-		private string ExportCsvDirectoryPath => _setting.ExportCsvDirectoryPath;
+		private string ExportNamespaceName => _settings.ExportNamespaceName;
+		private string ExportScriptDirectoryPath => _settings.ExportScriptDirectoryPath;
+		private string ExportCsvDirectoryPath => _settings.ExportCsvDirectoryPath;
 
 		private bool _downloadingFlag;
 		private bool _batchDownloadingFlag;
@@ -72,7 +72,7 @@ namespace SpreadSheetMaster.Editor {
 				// インポート設定
 				DrawImportSetting();
 
-				if (_setting == null) {
+				if (_settings == null) {
 					EditorGUILayout.HelpBox("シート設定を設定してください", MessageType.Warning);
 				} else {
 					// シートのダウンロード
@@ -113,9 +113,7 @@ namespace SpreadSheetMaster.Editor {
 
 			using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox)) {
 				Undo.RecordObject(this, "Modify ImportSetting");
-				_setting =
-					(SpreadSheetSetting)EditorGUILayout.ObjectField(_setting,
-						typeof(SpreadSheetSetting), false);
+				_settings = (SpreadSheetSettings)EditorGUILayout.ObjectField(_settings, typeof(SpreadSheetSettings), false);
 			}
 		}
 
@@ -126,7 +124,7 @@ namespace SpreadSheetMaster.Editor {
 				Undo.RecordObject(this, "Modify SpreadSheetId or SheetName");
 
 				_sheetIndex = EditorGUILayout.Popup("シート", _sheetIndex,
-					_setting.SheetDataArray.Select(sd => sd.Name).ToArray());
+					_settings.SheetDataArray.Select(sd => sd.Name).ToArray());
 
 				EditorGUILayout.LabelField("マスタ名", SheetMasterName);
 
@@ -397,7 +395,7 @@ namespace SpreadSheetMaster.Editor {
 			string csv,
 			string sheetName,
 			string masterName) {
-			ICsvParser parser = new CsvParser(_setting.IgnoreRowConditions);
+			ICsvParser parser = new CsvParser(_settings.IgnoreRowConditions);
 			var records = parser.Parse(csv, false);
 
 			return CreateMasterConfigData(sheetName, masterName, records);
@@ -456,11 +454,11 @@ namespace SpreadSheetMaster.Editor {
 				_validFlag = true,
 				_exportFlag = true,
 				_propertyName = StringUtility.Convert(columnName,
-					_setting.ColumnNameNamingConvention,
-					_setting.PropertyNamingConvention),
+					_settings.ColumnNameNamingConvention,
+					_settings.PropertyNamingConvention),
 				_constantName = StringUtility.Convert("column_" + columnName,
-					_setting.ColumnNameNamingConvention,
-					_setting.ConstantNamingConvention),
+					_settings.ColumnNameNamingConvention,
+					_settings.ConstantNamingConvention),
 				_type = GetDataTypeFromString(data),
 				EnumType = null,
 				_enumTypeName = string.Empty,
@@ -473,7 +471,7 @@ namespace SpreadSheetMaster.Editor {
 				return false;
 			}
 
-			return _setting.IgnoreColumnConditions.All(ignoreColumnCondition =>
+			return _settings.IgnoreColumnConditions.All(ignoreColumnCondition =>
 				!ignoreColumnCondition.IsIgnore(columnName));
 		}
 
@@ -498,8 +496,8 @@ namespace SpreadSheetMaster.Editor {
 		}
 
 		private Type FindEnumType(string enumTypeName) {
-			foreach (var namespaceName in _setting.FindNamespaceNameList) {
-				foreach (var assemblyName in _setting.FindAssemblyNameList) {
+			foreach (var namespaceName in _settings.FindNamespaceNameList) {
+				foreach (var assemblyName in _settings.FindAssemblyNameList) {
 					var type = Type.GetType($"{namespaceName}.{enumTypeName}, {assemblyName}");
 					if (type is { IsEnum: true, }) {
 						return type;
@@ -569,7 +567,7 @@ namespace SpreadSheetMaster.Editor {
 			CancellationToken token) {
 			_batchDownloadingFlag = true;
 
-			var sheetDataList = _setting.SheetDataArray;
+			var sheetDataList = _settings.SheetDataArray;
 			foreach (var sheetData in sheetDataList) {
 				await DownloadSheetAsync(spreadSheetId, sheetData.Id, sheetData.Name,
 					sheetData.MasterName, token);
@@ -621,7 +619,7 @@ namespace SpreadSheetMaster.Editor {
 			CancellationToken token) {
 			_batchDownloadingFlag = true;
 
-			var sheetDataList = _setting.SheetDataArray;
+			var sheetDataList = _settings.SheetDataArray;
 			foreach (var sheetData in sheetDataList) {
 				await DownloadSheetAsync(spreadSheetId, sheetData.Id, sheetData.Name,
 					sheetData.MasterName, token);
